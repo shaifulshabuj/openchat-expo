@@ -1,18 +1,38 @@
 import { StyleSheet } from 'react-native';
-import { Button } from 'native-base';
+import { Button, VStack, Text as NBText, Spinner } from 'native-base';
 
-import EditScreenInfo from '@/components/EditScreenInfo';
 import { Text, View } from '@/components/Themed';
+import { useAuth } from '../../src/hooks';
 
 export default function TabOneScreen() {
+  const { user, isLoading, isAuthenticated } = useAuth();
+
   return (
     <View style={styles.container}>
-      <Text style={styles.title}>Tab One</Text>
+      <Text style={styles.title}>Auth Status Test</Text>
       <View style={styles.separator} lightColor="#eee" darkColor="rgba(255,255,255,0.1)" />
-      <Button colorScheme="primary" onPress={() => console.log('NativeBase Button works!')}>
-        Test NativeBase Button
-      </Button>
-      <EditScreenInfo path="app/(tabs)/index.tsx" />
+      
+      <VStack space={4} alignItems="center">
+        {isLoading ? (
+          <Spinner size="lg" />
+        ) : isAuthenticated && user ? (
+          <>
+            <NBText fontSize="lg" bold>✅ Authenticated</NBText>
+            <NBText>User: {user.username}</NBText>
+            <NBText>Email: {user.email}</NBText>
+            <NBText>Display Name: {user.displayName || 'Not set'}</NBText>
+          </>
+        ) : (
+          <>
+            <NBText fontSize="lg" bold>❌ Not Authenticated</NBText>
+            <NBText>Please log in to continue</NBText>
+          </>
+        )}
+        
+        <Button colorScheme="primary" onPress={() => console.log('Auth Context:', { user, isAuthenticated })}>
+          Log Auth State
+        </Button>
+      </VStack>
     </View>
   );
 }
