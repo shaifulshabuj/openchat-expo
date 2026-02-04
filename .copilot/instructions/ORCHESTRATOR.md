@@ -72,10 +72,64 @@ Execute tasks using this 7-phase workflow. Each phase is mandatory and must be c
 ### **PHASE 2: DELEGATE** 🚀
 **Purpose:** Execute current task via Codex CLI with precise instructions.
 
+**📚 COMPLETE GUIDE:** Read `.copilot/CODEX_CLI_USAGE.md` for full documentation, examples, and best practices.
+
+**Core Principle: KEEP TASKS SMALL**
+- ⏱️ 1-5 minutes execution time
+- 📁 1-3 files maximum
+- ✅ Clear, verifiable outcome
+- 🔄 Easy to retry if needed
+
 **Command Format:**
 ```bash
-codex apply "Task description with full context, file paths, and quality criteria."
+# Use codex exec for non-interactive execution (RECOMMENDED)
+codex exec --full-auto -C /Volumes/SATECHI_WD_BLACK_2/openchat-expo \
+  "<Task description>
+   
+   Files: <specific files to create/modify>
+   Pattern: <reference file or pattern to follow>
+   Expected: <clear success criteria>
+   Verify: <command to test result>"
 ```
+
+**Quick Examples:**
+
+```bash
+# Type definition (1 min, 1 file)
+codex exec --full-auto -C /Volumes/SATECHI_WD_BLACK_2/openchat-expo \
+  "Add ContactRequest interface to packages/types/src/contacts.ts.
+   Files: packages/types/src/contacts.ts
+   Pattern: Follow packages/types/src/auth.ts structure
+   Expected: Interface with id, senderId, receiverId, status, createdAt
+   Verify: pnpm type-check"
+
+# API endpoint (3 min, 1-2 files)
+codex exec --full-auto -C /Volumes/SATECHI_WD_BLACK_2/openchat-expo \
+  "Create POST /contacts/request in apps/api/src/routes/contacts.ts.
+   Files: apps/api/src/routes/contacts.ts
+   Pattern: Follow apps/api/src/routes/auth.ts
+   Expected: Return 201 with {requestId, status}
+   Verify: curl -X POST http://localhost:8080/api/contacts/request"
+
+# UI component (5 min, 1-2 files)
+codex exec --full-auto -C /Volumes/SATECHI_WD_BLACK_2/openchat-expo \
+  "Create ContactCard in apps/mobile/src/components/Contacts/.
+   Files: apps/mobile/src/components/Contacts/ContactCard.tsx
+   Pattern: Follow apps/mobile/src/components/ProfileCard.tsx
+   Expected: Display name, avatar, status with NativeWind
+   Verify: cd apps/mobile && npx expo start"
+```
+
+**Task Time Limits:**
+| Task Type | Max Time | Max Files |
+|-----------|----------|-----------|
+| Type definition | 1 min | 1 |
+| API endpoint | 3 min | 1-2 |
+| UI component | 5 min | 1-2 |
+| Configuration | 2 min | 1 |
+| Refactor | 5 min | 2-3 |
+
+**If task would take >5 minutes:** Break it down into smaller sub-tasks!
 
 ---
 

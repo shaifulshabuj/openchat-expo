@@ -64,38 +64,71 @@ Break goal into atomic tasks
 ---
 
 ### **PHASE 2: DELEGATE** 🚀
-Execute task via Codex
+Execute task via Codex CLI
+
+**📚 COMPLETE DOCUMENTATION:** See `.copilot/CODEX_CLI_USAGE.md` for full Codex CLI reference, best practices, and examples.
 
 **Command Format:**
 ```bash
-codex apply "[Task description with full context]"
+# Use codex exec for non-interactive automation (RECOMMENDED)
+codex exec --full-auto -C /Volumes/SATECHI_WD_BLACK_2/openchat-expo \
+  "<Task description>
+   
+   Files: <specific files>
+   Pattern: <reference file>
+   Expected: <success criteria>
+   Verify: <verification command>"
 ```
 
-**Best Practices:**
+**Key Principles:**
 
-1. **Be Specific:**
+1. **Keep Tasks SMALL** (1-5 minutes, 1-3 files max)
+   - Single responsibility per task
+   - Clear, verifiable outcome
+   - Easy to review with git diff
+
+2. **Be Specific:**
 ```bash
-# ❌ BAD
-codex apply "Add auth endpoint"
+# ❌ BAD - Too vague, too large
+codex exec "Add auth endpoint"
 
-# ✅ GOOD
-codex apply "Create POST /api/auth/login endpoint in apps/api/src/routes/auth.ts. Accept {email, password} in body. Return JWT token on success. Use bcrypt to verify password. Return 401 on invalid credentials. Follow the pattern in apps/api/src/routes/users.ts for route structure."
+# ✅ GOOD - Specific, small, verifiable
+codex exec --full-auto -C /Volumes/SATECHI_WD_BLACK_2/openchat-expo \
+  "Create POST /auth/login endpoint in apps/api/src/routes/auth.ts.
+   
+   Files: apps/api/src/routes/auth.ts (create new)
+   Pattern: Follow apps/api/src/routes/health.ts structure
+   Expected: Endpoint returns 200 with {token, user} on success, 401 on failure
+   Verify: curl -X POST http://localhost:8080/api/auth/login -d '{\"email\":\"test@test.com\"}'"
 ```
 
-2. **Provide Context:**
+3. **Provide Context:**
 ```bash
-codex apply "Add chat message component to apps/mobile/app/chat/[id].tsx. Component should display message content, sender avatar, and timestamp. Follow the design pattern in apps/mobile/components/MessageBubble.tsx. Use NativeWind classes for styling. Accept messageId, content, sender, timestamp as props."
+# Reference existing patterns
+codex exec --full-auto -C /Volumes/SATECHI_WD_BLACK_2/openchat-expo \
+  "Add ContactRequest interface to packages/types/src/contacts.ts.
+   
+   Files: packages/types/src/contacts.ts (create new)
+   Pattern: Follow same export structure as packages/types/src/auth.ts
+   Expected: Interface with fields: id, senderId, receiverId, status, createdAt
+   Verify: pnpm --filter @openchat/types type-check"
 ```
 
-3. **Reference Skills:**
+4. **Use Full Auto Mode:**
 ```bash
-codex apply "Setup Socket.io gateway in NestJS following .copilot/skills/socketio-realtime/SKILL.md workflow. Create RealtimeGateway in apps/api/src/modules/realtime/realtime.gateway.ts. Implement message:send and message:new events. Use @WebSocketGateway decorator."
+# --full-auto = workspace-write sandbox + on-request approvals
+# Safe for normal development, no manual approvals needed
+codex exec --full-auto -C /Volumes/SATECHI_WD_BLACK_2/openchat-expo "..."
 ```
 
-4. **Set Expectations:**
-```bash
-codex apply "Add Prisma User model to apps/api/prisma/schema.prisma. Include fields: id (UUID), email (unique), username (unique), password, avatar (optional), createdAt, updatedAt. Run 'npx prisma migrate dev --name add_user_model' after adding. Verify with 'npx prisma validate'."
-```
+**Time Guidelines:**
+- Type definitions: 1 min
+- Single API endpoint: 3 min
+- UI component: 5 min
+- Configuration: 2 min
+- Small refactor: 5 min
+
+**If task takes >5 min:** Break it down further!
 
 ---
 
@@ -394,14 +427,19 @@ echo "⚠️ Codex unavailable, executed manually" >> .copilot/works/codex_work_
 # 1. Check Codex configuration
 cat ~/.config/codex/config.json  # or wherever config is stored
 
-# 2. Try to reconfigure Codex
-codex config --reset
-codex login  # Re-authenticate if needed
+# 2. Check login status
+codex login --status
 
-# 3. Test with simple command
-echo "test" | codex apply "echo this back"
+# 3. Try to reconfigure Codex
+codex logout
+codex login  # Select "Sign in with ChatGPT"
 
-# 4. If still failing, switch to manual execution
+# 4. Test with simple command
+echo "print('hello')" > test.py
+codex exec "Add a comment explaining what this does"
+rm test.py
+
+# 5. If still failing, switch to manual execution
 # This is the primary fallback - always works
 
 # 5. Execute task manually with GitHub Copilot
