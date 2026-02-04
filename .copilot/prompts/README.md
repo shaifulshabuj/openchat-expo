@@ -1,17 +1,17 @@
-# 📋 Task Prompts Directory
+# 📋 Copilot Master Prompts Guide
 
-This directory contains structured task prompts for systematic execution of the OpenChat Expo migration.
+This guide is for **GitHub Copilot** to create and execute master prompts that orchestrate the OpenChat Expo migration.
 
 ---
 
 ## 🎯 Purpose
 
-Task prompts provide:
-- **Clear instructions** for Codex CLI or manual execution
-- **Quality gates** to verify completion
-- **File references** for context
-- **Expected outcomes** for validation
-- **Documentation requirements** for tracking
+Master prompts provide:
+- **High-level orchestration** for features or phases
+- **Task decomposition** into atomic Codex tasks
+- **Progress tracking** across multiple tasks
+- **Quality validation** for complete features
+- **Documentation coordination** across sessions
 
 ---
 
@@ -33,218 +33,332 @@ Task prompts provide:
 
 ---
 
-## 📝 Prompt Template
-
-Each task prompt MUST include these sections:
+## 📝 Master Prompt Template
 
 ```markdown
-# Task XXX: [Task Title]
+# Master Prompt XXX: [Feature/Phase Name]
 
 **Date:** YYYY-MM-DD HH:MM JST  
 **Phase:** [Phase name]  
-**Estimated Time:** [X minutes]  
-**Complexity:** [Simple/Moderate/Complex]  
-**Files to Modify:** [1-3 files max]
+**Type:** [Feature / Phase / Multi-Task]  
+**Estimated Duration:** [Hours/Days]  
+**Codex Tasks:** [X tasks]
 
 ---
 
 ## 🎯 Objective
 
-[Clear 1-2 sentence description of what needs to be accomplished]
+[1-2 paragraph description of the feature or phase goal]
 
 ---
 
 ## 📋 Context
 
-**Current State:**
+### Current State:
 - [What exists now]
+- [Dependencies met]
 
-**Desired State:**
+### Desired State:
 - [What should exist after]
+- [Success indicators]
 
-**Why This Task:**
-- [Rationale and dependencies]
+### Why This Master Prompt:
+- [Strategic importance]
+- [How it fits in migration plan]
+- [Relationship to other features]
 
 ---
 
-## 🔧 Implementation Steps
+## 🧩 Task Decomposition
 
-### Step 1: [Action]
-**Command/Action:**
+This master prompt breaks down into the following Codex tasks:
+
+### Codex Task 1: [Task Name]
+- **File:** `CODEX_XXX_YYYYMMDD.prompts.md`
+- **What:** [Brief description]
+- **Files:** [Files to modify]
+- **Time:** [Estimated minutes]
+- **Status:** [NOT STARTED / IN PROGRESS / COMPLETE]
+
+### Codex Task 2: [Task Name]
+- **File:** `CODEX_XXX_YYYYMMDD.prompts.md`
+- **What:** [Brief description]
+- **Files:** [Files to modify]
+- **Time:** [Estimated minutes]
+- **Status:** [NOT STARTED / IN PROGRESS / COMPLETE]
+
+[... repeat for all tasks ...]
+
+**Total Codex Tasks:** X  
+**Total Estimated Time:** Y minutes
+
+---
+
+## 🔄 Execution Workflow
+
+### Phase 1: DISCOVER
+**Actions:**
+- [ ] Read `.copilot/works/codex_next_priorities.md`
+- [ ] Read `work_reports/01_PROJECT_STATUS.md`
+- [ ] Check git status (clean working tree)
+- [ ] Review feature specification
+- [ ] Identify dependencies
+
+**Success Criteria:**
+- All prerequisites met
+- Clear understanding of current state
+- No blocking issues
+
+---
+
+### Phase 2: DECOMPOSE (Already Done)
+**This master prompt has pre-decomposed tasks:**
+- X Codex tasks identified
+- Each task is atomic (1-5 min, 1-3 files)
+- Dependencies mapped
+- Quality gates defined
+
+---
+
+### Phase 3: DELEGATE
+
+For each Codex task:
+
+**Step 1:** Create or verify Codex prompt exists
 ```bash
-# Commands to run
+# Check if prompt exists
+ls .copilot/prompts/CODEX_XXX_YYYYMMDD.prompts.md
+
+# If not, create using CODEX_README.md template
 ```
 
-**Expected Output:**
+**Step 2:** Execute via Codex CLI (or manual fallback)
+```bash
+# Primary: Codex CLI
+codex exec --full-auto -C /path "$(cat .copilot/prompts/CODEX_XXX_YYYYMMDD.prompts.md)"
+
+# Fallback: Manual execution
+cat .copilot/prompts/CODEX_XXX_YYYYMMDD.prompts.md
+# Follow steps manually
 ```
-Expected result
-```
 
-**Verify:**
-- [ ] Check 1
-- [ ] Check 2
-
-### Step 2: [Action]
-[Repeat for each step]
+**Step 3:** Wait for completion and capture output
 
 ---
 
-## ✅ Quality Gates
+### Phase 4: VERIFY
 
-**Standard Gates (ALL tasks):**
-- [ ] `git diff` shows only intended changes
-- [ ] `pnpm type-check` passes
-- [ ] `pnpm build` succeeds
-- [ ] No console errors
+After each Codex task:
+- [ ] Run quality gates from Codex prompt
+- [ ] Verify files modified correctly
+- [ ] Check no unintended changes
+- [ ] Test on target platform (if applicable)
 
-**Task-Specific Gates:**
-- [ ] [Specific check for this task]
-- [ ] [Another specific check]
-
----
-
-## 📚 Files to Reference
-
-**Read these for context:**
-- `path/to/file1.ts` - [Why to read this]
-- `path/to/file2.ts` - [Why to read this]
-
-**Follow patterns from:**
-- `path/to/example.ts` - [Pattern to follow]
-
----
-
-## 📝 Documentation Updates Required
-
-After completing this task, update:
-1. `.copilot/works/codex_work_progress_and_reply.md`
-2. `work_reports/01_PROJECT_STATUS.md`
-3. `work_reports/00_FEATURE_CHECKLIST.md`
-4. `.copilot/works/codex_metrics.md`
-5. `CHANGELOG.md`
-
----
-
-## 🎯 Success Criteria
-
-Task is complete when:
-- [ ] All implementation steps done
+After all Codex tasks:
+- [ ] Feature works end-to-end
 - [ ] All quality gates pass
-- [ ] All documentation updated
-- [ ] Changes committed with clear message
-- [ ] Verification completed
+- [ ] No regressions introduced
+- [ ] Performance acceptable
 
 ---
 
-## 🚨 Rollback Plan
+### Phase 5: DOCUMENT
 
-If task fails:
-1. [Rollback step 1]
-2. [Rollback step 2]
-3. [How to restore previous state]
+After completing all tasks:
+
+**Update 5 Required Files:**
+
+1. **`.copilot/works/codex_work_progress_and_reply.md`**
+   ```markdown
+   ## Master Prompt XXX Complete
+
+   **Feature:** [Name]
+   **Date:** [Date]
+   **Codex Tasks:** X/X complete
+   **Time:** [Actual vs estimated]
+   **Issues:** [Any issues encountered]
+   ```
+
+2. **`work_reports/01_PROJECT_STATUS.md`**
+   ```markdown
+   ## ✅ Latest Progress (Date) - [FEATURE NAME COMPLETE]
+   - Feature description
+   - Key accomplishments
+   - Phase progress updated
+   ```
+
+3. **`work_reports/00_FEATURE_CHECKLIST.md`**
+   - Update feature status to ✅
+   - Mark sub-features complete
+
+4. **`.copilot/works/codex_metrics.md`**
+   - Master prompt metrics
+   - Codex task breakdown
+   - Time accuracy
+
+5. **`CHANGELOG.md`**
+   - Feature entry with changes
+   - Breaking changes (if any)
 
 ---
 
-**Status:** [NOT STARTED / IN PROGRESS / COMPLETE / BLOCKED]  
-**Assignee:** [Codex CLI / Manual]  
-**Blocking Issues:** [None / Description]
+### Phase 6: CHECKPOINT
+
+**Actions:**
+- [ ] Review all changes: `git diff`
+- [ ] Stage changes: `git add -A`
+- [ ] Commit with clear message
+- [ ] Push to GitHub
+- [ ] Update master prompt status to COMPLETE
+- [ ] Move to next master prompt
+
+**Commit Message Format:**
+```
+✨ feat: [Feature name]
+
+ADDED:
+- [List additions]
+
+CHANGED:
+- [List changes]
+
+VERIFIED:
+- [Quality checks passed]
+
+CODEX TASKS: X/X complete
+TIME: Y minutes (estimated: Z minutes)
 ```
 
 ---
 
-## 🔄 Task Lifecycle
+## 📊 Master Prompt Types
 
-### 1. Planning Phase
-- Read `.copilot/works/codex_next_priorities.md`
-- Identify next task from queue
-- Create prompt file with all sections
+### Type 1: Single Feature
+**Characteristics:**
+- 1-3 Codex tasks
+- Single user-facing feature
+- 1-2 hour duration
 
-### 2. Preparation Phase
-- Review all reference files
-- Understand dependencies
-- Verify prerequisites met
-
-### 3. Execution Phase
-- Follow implementation steps exactly
-- Run quality gates after each step
-- Document any deviations
-
-### 4. Verification Phase
-- Run all quality gates
-- Verify expected outcomes
-- Test on target platforms
-
-### 5. Documentation Phase
-- Update all 5 required files
-- Write clear commit message
-- Push to GitHub
-
-### 6. Closure Phase
-- Mark task as complete
-- Archive prompt file (keep for reference)
-- Move to next task
+**Example:** "Add biometric authentication"
+- Codex Task 1: Add expo-local-authentication
+- Codex Task 2: Create auth service
+- Codex Task 3: Wire up login UI
 
 ---
 
-## 📊 Task Types & Sizing
+### Type 2: Feature Group
+**Characteristics:**
+- 4-8 Codex tasks
+- Related features (same domain)
+- 4-8 hour duration
 
-### Simple Tasks (1-2 min, 1 file)
-**Examples:**
-- Type definitions
-- Configuration files
-- Simple utilities
-
-**Template Adjustments:**
-- Fewer implementation steps
-- Basic quality gates
-- Quick verification
-
-### Moderate Tasks (3-5 min, 2-3 files)
-**Examples:**
-- API endpoints
-- UI components
-- Database migrations
-
-**Template Adjustments:**
-- Standard implementation steps
-- Full quality gates
-- Platform testing
-
-### Complex Tasks (5 min, 3 files MAX)
-**Examples:**
-- Feature integrations
-- Real-time connections
-- Native integrations
-
-**Template Adjustments:**
-- Detailed implementation steps
-- Extended quality gates
-- Comprehensive testing
-
-**⚠️ RULE:** If task takes >5 min, BREAK IT DOWN into smaller tasks
+**Example:** "Authentication System"
+- Multiple related features
+- Shared backend/state
+- Complex integration
 
 ---
 
-## 🎯 Integration with Workflow
+### Type 3: Phase Completion
+**Characteristics:**
+- 10+ Codex tasks
+- Complete phase milestone
+- 1-2 day duration
 
-### Codex CLI Execution:
+**Example:** "Phase 0.B: Project Scaffolding"
+- Infrastructure setup
+- Multiple tools/frameworks
+- Foundation for future work
+
+---
+
+## ✅ Quality Standards for Master Prompts
+
+### Before Creating:
+- [ ] Objective is clear and measurable
+- [ ] All Codex tasks identified (atomic, 1-5 min each)
+- [ ] Dependencies mapped
+- [ ] Success criteria defined
+- [ ] Documentation plan clear
+
+### During Execution:
+- [ ] Follow 6-phase workflow exactly
+- [ ] Verify each Codex task before next
+- [ ] Document issues immediately
+- [ ] Update status continuously
+
+### After Completion:
+- [ ] All 5 documentation files updated
+- [ ] All quality gates passed
+- [ ] Changes committed and pushed
+- [ ] Master prompt marked COMPLETE
+
+---
+
+## 🎯 Integration with Codex
+
+### Relationship:
+```
+Master Prompt (Copilot)
+├── Orchestrates overall feature
+├── Manages progress tracking
+└── Delegates atomic tasks to:
+    ├── CODEX_001_*.prompts.md
+    ├── CODEX_002_*.prompts.md
+    └── CODEX_XXX_*.prompts.md
+```
+
+### When to Create Codex Prompts:
+- **Pre-created:** Master prompt references existing Codex prompts
+- **On-the-fly:** Copilot creates Codex prompt as needed during execution
+- **Template-based:** Use `.copilot/prompts/CODEX_README.md` template
+
+### How to Delegate:
 ```bash
-# Generate structured instruction from prompt
-codex exec --full-auto -C /path/to/openchat-expo "$(cat .copilot/prompts/XXX_YYYYMMDD.prompts.md)"
+# Read Codex task guide
+cat .copilot/prompts/CODEX_README.md
+
+# Execute Codex task
+codex exec --full-auto -C /path "$(cat .copilot/prompts/CODEX_XXX_YYYYMMDD.prompts.md)"
+
+# Or manual fallback
+cat .copilot/prompts/CODEX_XXX_YYYYMMDD.prompts.md
+# Follow steps manually
 ```
 
-### Manual Execution:
-1. Read prompt file completely
-2. Follow steps in order
-3. Run quality gates
-4. Update documentation
-5. Commit changes
+---
 
-### With GitHub Copilot:
-- Prompt file provides context
-- Copilot follows 7-phase workflow
-- Quality gates enforced
-- Documentation automatic
+## 📋 Master Prompt Lifecycle
+
+### 1. Planning
+- Read migration plan and feature specifications
+- Identify next feature/phase to implement
+- Determine if feature needs master prompt
+- Create master prompt with task breakdown
+
+### 2. Preparation
+- Ensure all Codex prompts exist or create them
+- Verify prerequisites met
+- Check for blocking issues
+- Estimate total time
+
+### 3. Execution
+- Follow 6-phase workflow
+- Execute Codex tasks sequentially
+- Verify after each task
+- Handle errors with rollback plans
+
+### 4. Completion
+- Update all documentation
+- Run final verification
+- Commit and push
+- Mark master prompt complete
+
+### 5. Retrospective
+- Compare estimated vs actual time
+- Note issues encountered
+- Improve future prompts
+- Update metrics
 
 ---
 
@@ -252,13 +366,20 @@ codex exec --full-auto -C /path/to/openchat-expo "$(cat .copilot/prompts/XXX_YYY
 
 ```
 .copilot/prompts/
-├── README.md (this file)
-├── 001_20260204.prompts.md (Phase 0.B.1: Init Expo)
-├── 002_20260204.prompts.md (Phase 0.B.2: NativeBase)
-├── 003_20260205.prompts.md (Phase 0.B.3: NativeWind)
-├── ...
-├── 077_20260630.prompts.md (Final feature)
-└── archives/ (optional, for completed tasks)
+├── README.md (this file - Master prompts guide)
+├── CODEX_README.md (Codex CLI tasks guide)
+│
+├── Master Prompts (Copilot):
+│   ├── 001_20260204.md (Phase 0.B: Scaffolding)
+│   ├── 002_20260207.md (Phase 1: Auth System)
+│   ├── 003_20260214.md (Phase 2: Messaging)
+│   └── ...
+│
+└── Codex Tasks (atomic):
+    ├── CODEX_001_20260204.prompts.md (Init Expo)
+    ├── CODEX_002_20260204.prompts.md (NativeBase)
+    ├── CODEX_003_20260205.prompts.md (NativeWind)
+    └── ...
 ```
 
 ---
@@ -266,92 +387,101 @@ codex exec --full-auto -C /path/to/openchat-expo "$(cat .copilot/prompts/XXX_YYY
 ## 🎓 Best Practices
 
 ### DO:
-- ✅ Keep prompts atomic (1-3 files max)
-- ✅ Include all quality gates
-- ✅ Reference existing patterns
-- ✅ Document expected outcomes
-- ✅ Plan rollback strategy
-- ✅ Update all 5 documentation files
+- ✅ Break features into atomic Codex tasks
+- ✅ Follow 6-phase workflow strictly
+- ✅ Verify after each Codex task
+- ✅ Update documentation continuously
+- ✅ Use Codex CLI when available
+- ✅ Have manual fallback ready
+- ✅ Track time for accuracy improvement
 
 ### DON'T:
-- ❌ Create prompts for >5 min tasks
-- ❌ Skip quality gates
+- ❌ Skip verification steps
+- ❌ Execute tasks without prerequisites
 - ❌ Forget documentation updates
-- ❌ Use vague instructions
-- ❌ Ignore dependencies
-- ❌ Commit without verification
+- ❌ Continue after failed quality gates
+- ❌ Create master prompts for single atomic tasks
+- ❌ Delegate to Codex without clear prompts
 
 ---
 
 ## 📊 Tracking Progress
 
-**View all tasks:**
+### Master Prompts:
 ```bash
-ls -1 .copilot/prompts/*.prompts.md | wc -l
+# Count total
+ls -1 .copilot/prompts/[0-9]*.md | wc -l
+
+# Count complete
+grep -l "Status: COMPLETE" .copilot/prompts/[0-9]*.md | wc -l
+
+# Current progress
+echo "$(grep -l "Status: COMPLETE" .copilot/prompts/[0-9]*.md | wc -l) / $(ls -1 .copilot/prompts/[0-9]*.md | wc -l)"
 ```
 
-**Count completed:**
+### Related Codex Tasks:
 ```bash
-grep -l "Status: COMPLETE" .copilot/prompts/*.prompts.md | wc -l
-```
+# From master prompt, list related Codex tasks
+grep "CODEX_" .copilot/prompts/001_20260204.md
 
-**Find blocked tasks:**
-```bash
-grep -l "Status: BLOCKED" .copilot/prompts/*.prompts.md
-```
-
-**Next task to execute:**
-```bash
-grep -l "Status: NOT STARTED" .copilot/prompts/*.prompts.md | head -1
+# Check their status
+grep -l "Status: COMPLETE" .copilot/prompts/CODEX_*.prompts.md
 ```
 
 ---
 
 ## 🔗 Related Documentation
 
-- `.copilot/instructions/ORCHESTRATOR.md` - 7-phase workflow
-- `.copilot/CODEX_WORKFLOW.md` - Codex delegation process
-- `.copilot/works/codex_next_priorities.md` - Task queue
-- `.github/copilot.instructions.md` - Master instructions
+**Core Workflow:**
+- `.github/copilot.instructions.md` - Overall orchestrator instructions
+- `.copilot/instructions/ORCHESTRATOR.md` - 7-phase protocol
 - `rules.md` - 41 development rules
-- `AGENT.md` - Agent behavior guidelines
+- `AGENT.md` - Agent behavior
+
+**Task Execution:**
+- `.copilot/prompts/CODEX_README.md` - Codex task guide (delegate here)
+- `.copilot/CODEX_CLI_USAGE.md` - Codex command reference
+- `.copilot/CODEX_WORKFLOW.md` - Delegation workflow
+
+**Progress Tracking:**
+- `.copilot/works/codex_next_priorities.md` - Task queue
+- `work_reports/01_PROJECT_STATUS.md` - Current status
+- `work_reports/00_FEATURE_CHECKLIST.md` - Feature tracking
 
 ---
 
-## ✅ Prompt Quality Checklist
+## ✅ Master Prompt Quality Checklist
 
-Before creating a prompt, ensure:
-- [ ] Task is atomic (1-3 files, 1-5 min)
-- [ ] Objective is clear and measurable
-- [ ] Implementation steps are detailed
-- [ ] Quality gates are defined
-- [ ] Documentation updates listed
-- [ ] Success criteria are clear
-- [ ] Rollback plan is provided
-- [ ] File references are accurate
-- [ ] Dependencies are noted
+Before finalizing a master prompt:
+- [ ] Objective is feature-level (not task-level)
+- [ ] All Codex tasks are atomic (1-5 min, 1-3 files)
+- [ ] Dependencies clearly identified
+- [ ] Success criteria measurable
+- [ ] 6-phase workflow defined
+- [ ] Documentation plan complete
+- [ ] Rollback strategy exists
+- [ ] Time estimate realistic
 
 ---
 
 ## 🎯 Success Metrics
 
-**Good Prompt Indicators:**
-- Codex/human can execute without questions
-- Quality gates catch all issues
-- Documentation updates are clear
-- Rollback plan works if needed
-- Task completes in estimated time
+**Good Master Prompt:**
+- Copilot executes without questions
+- All Codex tasks complete successfully
+- Documentation updated correctly
+- Feature works end-to-end
+- Time estimate accurate (±20%)
 
-**Poor Prompt Indicators:**
-- Vague instructions require clarification
-- Missing quality gates allow bugs
-- Documentation updates forgotten
-- No rollback plan causes issues
-- Task takes much longer than estimated
+**Poor Master Prompt:**
+- Unclear objective or scope
+- Tasks not atomic enough
+- Missing dependencies
+- Quality gates undefined
+- Documentation incomplete
 
 ---
 
-**Created:** February 4, 2026  
-**Last Updated:** February 4, 2026  
+**Created:** February 4, 2026 14:15 JST  
 **Version:** 1.0  
-**Total Tasks Planned:** 77 features across 20 weeks
+**Purpose:** Guide Copilot in creating and executing master prompts for 77-feature migration
