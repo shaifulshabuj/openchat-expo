@@ -1,42 +1,95 @@
 # 📋 Codex Next Priorities
 
-**Last Updated:** February 4, 2026 12:35 JST  
-**Current Phase:** Phase 0 - Project Setup
+**Last Updated:** February 4, 2026 13:50 JST  
+**Current Phase:** Phase 0.B - Project Scaffolding  
+**Migration Approach:** Integrated (77 features: 52 PWA + 25 Expo)  
+**Timeline:** 20 weeks (Week 1-2 starting next)
 
 ---
 
 ## 🎯 CURRENT TASK QUEUE
 
-### ✅ COMPLETED
+### ✅ COMPLETED (Phase 0.A - 100%)
 - [x] Create GitHub repository `openchat-expo`
-- [x] Setup Copilot agentic infrastructure
-  - [x] Instructions/ORCHESTRATOR.md
-  - [x] Skills index and core skills
-  - [x] Work tracking system
+- [x] Setup Copilot agentic infrastructure (240KB documentation)
+- [x] Create 10 specialized skills
+- [x] Validate 7-phase workflow with Codex CLI
+- [x] Complete final review and scope clarification
+- [x] Make critical decisions (UI library, approach, timeline)
+- [x] Update all documentation files
 
-### 🔄 IN PROGRESS
-- [ ] **Phase 0.1: Initialize Expo Mobile App**
-  - Priority: HIGH
-  - Assignee: Awaiting start command
-  - Deadline: Today
-  - Details: Create Expo app with Expo Router, TypeScript, NativeWind
+### 🔄 NEXT (Phase 0.B - Week 1-2 of 20)
+**Goal:** Initialize Expo app + NestJS backend with NativeBase
 
-### 📋 PENDING (In Priority Order)
-1. **Phase 0.2: Initialize NestJS Backend**
-   - Create NestJS API with tRPC integration
-   - Setup Prisma with PostgreSQL schema
-   - Configure JWT authentication
+#### Priority 1 (Day 1-2):
+- [ ] **Task 0.B.1:** Initialize Expo app with tabs template
+  - Command: `npx create-expo-app@latest apps/mobile --template tabs`
+  - Files: apps/mobile/ (new directory)
+  - Verify: App runs with `npx expo start`
 
-2. **Phase 0.3: Setup Monorepo Structure**
-   - Configure pnpm workspaces
-   - Setup Turborepo for build orchestration
-   - Create shared packages (types, config)
+- [ ] **Task 0.B.2:** Install and configure NativeBase
+  - Install: `npx expo install native-base`
+  - Configure: Update app.json and _layout.tsx
+  - Verify: NativeBase Button renders
 
-3. **Phase 0.4: Configure Docker Compose**
-   - PostgreSQL service
-   - Redis service
-   - API service
-   - Hot reload setup
+- [ ] **Task 0.B.3:** Configure NativeWind
+  - Install: tailwindcss + nativewind
+  - Configure: tailwind.config.js + babel.config.js
+  - Verify: Tailwind classes work
+
+#### Priority 2 (Day 3-4):
+- [ ] **Task 0.B.4:** Initialize NestJS backend
+  - Command: `npx @nestjs/cli new apps/api`
+  - Files: apps/api/ (new directory)
+  - Verify: `pnpm --filter openchat-api start`
+
+- [ ] **Task 0.B.5:** Migrate Prisma schema from PWA
+  - Copy: /openchat/apps/api/prisma/schema.prisma
+  - Update: Connection URLs for Docker
+  - Run: `npx prisma migrate dev --name init`
+  - Verify: 14 models created in PostgreSQL
+
+- [ ] **Task 0.B.6:** Configure tRPC in NestJS
+  - Install: @trpc/server + @trpc/client
+  - Create: apps/api/src/trpc/ directory
+  - Setup: Basic router with health check
+  - Verify: tRPC procedure callable
+
+#### Priority 3 (Day 5-7):
+- [ ] **Task 0.B.7:** Create shared packages
+  - Create: packages/types/ with @openchat/types
+  - Create: packages/config/ with @openchat/config
+  - Setup: TypeScript build config
+  - Verify: Import in apps/mobile and apps/api
+
+- [ ] **Task 0.B.8:** Verify Docker Compose stack
+  - Start: `docker compose up -d`
+  - Check: PostgreSQL, Redis, API containers
+  - Test: `curl http://localhost:8080/health`
+  - Verify: Hot reload works
+
+#### Priority 4 (Day 8-10):
+- [ ] **Task 0.B.9:** Test Expo on iOS simulator
+  - Command: `cd apps/mobile && npx expo run:ios`
+  - Verify: App launches on simulator
+  - Test: Hot reload works
+
+- [ ] **Task 0.B.10:** Test Expo on Android emulator
+  - Command: `npx expo run:android`
+  - Verify: App launches on emulator
+  - Test: Hot reload works
+
+- [ ] **Task 0.B.11:** Test pnpm workspace commands
+  - Test: `pnpm dev` (all apps)
+  - Test: `pnpm build` (all packages)
+  - Test: `pnpm type-check` (all workspaces)
+  - Verify: All commands work
+
+- [ ] **Task 0.B.12:** Configure EAS Build and CI/CD
+  - Run: `cd apps/mobile && eas build:configure`
+  - Update: .github/workflows/ci.yml
+  - Push: Verify CI/CD pipeline passes
+  - Verify: EAS Build completes successfully
 
 4. **Phase 0.5: Setup CI/CD**
    - GitHub Actions for EAS Build

@@ -1,8 +1,10 @@
 # 📋 OpenChat Expo - Feature Implementation Checklist
 
-**Last Updated:** February 4, 2026 12:40 JST  
+**Last Updated:** February 4, 2026 13:50 JST  
 **Status:** 🚧 **IN DEVELOPMENT** - 0% Implementation (Phase 0 Setup)  
-**Target:** Complete migration of 52 features from PWA to Expo  
+**Target:** Complete migration of 77 features (52 PWA + 25 Expo-specific)  
+**Approach:** Integrated migration with Expo enhancements per feature  
+**Timeline:** 20 weeks (Feb 2026 - Jun 2026)  
 **Platform:** iOS, Android, Web, Windows, macOS
 
 ---
