@@ -1,10 +1,14 @@
 import { Injectable } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
+import { SocketService } from '../socket/socket.service';
 import { MessageType } from '@prisma/client';
 
 @Injectable()
 export class MessageService {
-  constructor(private readonly prisma: PrismaService) {}
+  constructor(
+    private readonly prisma: PrismaService,
+    private readonly socketService: SocketService,
+  ) {}
 
   /**
    * Send a new message
@@ -79,6 +83,20 @@ export class MessageService {
       where: { id: input.conversationId },
       data: { lastMessageAt: new Date() },
     });
+
+    // Emit real-time event to conversation room
+    this.socketService.notifyMessageUpdate(input.conversationId, { message });
+
+    // Send notifications to mentioned users
+    if (input.mentions && input.mentions.length > 0) {
+      for (const mentionedUserId of input.mentions) {
+        this.socketService.notifyNewMessage(mentionedUserId, {
+          message,
+          conversationId: input.conversationId,
+          type: 'mention',
+        });
+      }
+    }
 
     return message;
   }
@@ -205,6 +223,20 @@ export class MessageService {
       },
     });
 
+    // Emit read receipt to conversation
+    this.socketService.notifyMessageRead(message.senderId, {
+      messageId: input.messageId,
+      readAt: updated.seenAt!,
+    });
+
+    // Also emit to conversation for read receipt indicators
+    this.socketService.notifyMessageUpdate(message.conversationId, {
+      type: 'read',
+      messageId: input.messageId,
+      userId: input.userId,
+      seenAt: updated.seenAt,
+    });
+
     return updated;
   }
 
@@ -232,7 +264,7 @@ export class MessageService {
       throw new Error('Cannot edit a deleted message');
     }
 
-    return this.prisma.message.update({
+    const updated = await this.prisma.message.update({
       where: { id: input.messageId },
       data: {
         content: input.content,
@@ -249,6 +281,13 @@ export class MessageService {
         },
       },
     });
+
+    // Emit update event to conversation
+    this.socketService.notifyMessageUpdate(message.conversationId, {
+      message: updated,
+    });
+
+    return updated;
   }
 
   /**
@@ -270,13 +309,18 @@ export class MessageService {
       throw new Error('Only the sender can delete this message');
     }
 
-    return this.prisma.message.update({
+    const updated = await this.prisma.message.update({
       where: { id: input.messageId },
       data: {
         deletedAt: new Date(),
         content: null, // Clear content for privacy
       },
     });
+
+    // Emit delete event to conversation
+    this.socketService.notifyMessageDelete(message.conversationId, input.messageId);
+
+    return updated;
   }
 
   /**

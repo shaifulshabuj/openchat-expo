@@ -84,7 +84,19 @@ export class SocketGateway
       // Join user's personal room for targeted messages
       client.join(`user:${userId}`);
 
-      this.logger.log(`User ${userId} connected (socket: ${client.id})`);
+      // Auto-join user's conversation rooms
+      const conversations = await this.prisma.conversationMember.findMany({
+        where: { userId },
+        select: { conversationId: true },
+      });
+
+      for (const { conversationId } of conversations) {
+        client.join(`conversation:${conversationId}`);
+      }
+
+      this.logger.log(
+        `User ${userId} connected and joined ${conversations.length} conversation rooms (socket: ${client.id})`,
+      );
 
       // Notify user's contacts that they're online
       this.server.emit('user:online', { userId, timestamp: new Date() });
