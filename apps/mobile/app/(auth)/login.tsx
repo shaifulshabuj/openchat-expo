@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   Box,
   VStack,
@@ -13,10 +13,13 @@ import {
   Icon,
   Pressable,
   ScrollView,
+  HStack,
 } from 'native-base';
 import { MaterialIcons } from '@expo/vector-icons';
 import { useAuth } from '../../src/contexts/AuthContext';
 import { useRouter } from 'expo-router';
+import { BiometricService } from '../../src/lib/biometric';
+import { storage } from '../../src/lib/storage';
 
 export default function LoginScreen() {
   const [identifier, setIdentifier] = useState('');
@@ -29,9 +32,30 @@ export default function LoginScreen() {
     password?: string;
   }>({});
 
+  // Biometric state
+  const [biometricAvailable, setBiometricAvailable] = useState(false);
+  const [biometricEnabled, setBiometricEnabled] = useState(false);
+  const [biometricType, setBiometricType] = useState('');
+
   const { login } = useAuth();
   const router = useRouter();
   const toast = useToast();
+
+  // Check biometric availability on mount
+  useEffect(() => {
+    checkBiometricAvailability();
+  }, []);
+
+  const checkBiometricAvailability = async () => {
+    const status = await BiometricService.getBiometricStatus();
+    setBiometricAvailable(status.available);
+    setBiometricType(status.message);
+
+    if (status.available) {
+      const enabled = await BiometricService.isBiometricLoginEnabled();
+      setBiometricEnabled(enabled);
+    }
+  };
 
   const validateForm = (): boolean => {
     const newErrors: typeof errors = {};
@@ -88,6 +112,51 @@ export default function LoginScreen() {
 
   const handleRegister = () => {
     router.push('/(auth)/register');
+  };
+
+  const handleBiometricLogin = async () => {
+    setIsLoading(true);
+    try {
+      // Authenticate using biometrics
+      const result = await BiometricService.authenticate('Login to OpenChat');
+
+      if (!result.success) {
+        toast.show({
+          description: result.error || 'Biometric authentication failed',
+          placement: 'top',
+        });
+        setIsLoading(false);
+        return;
+      }
+
+      // Get stored user credentials
+      const storedUser = await storage.getUser();
+      if (!storedUser || !storedUser.email) {
+        toast.show({
+          description: 'No saved credentials found. Please login with password first.',
+          placement: 'top',
+        });
+        setIsLoading(false);
+        return;
+      }
+
+      // For biometric login, we need the stored token (already handled by AuthContext)
+      // Just navigate to home if user is already authenticated
+      toast.show({
+        description: 'Login successful! Welcome back.',
+        placement: 'top',
+      });
+
+      router.replace('/(tabs)');
+    } catch (error: any) {
+      console.error('Biometric login error:', error);
+      toast.show({
+        description: error.message || 'Biometric login failed',
+        placement: 'top',
+      });
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   return (
@@ -192,6 +261,32 @@ export default function LoginScreen() {
           >
             Sign In
           </Button>
+
+          {/* Biometric Login Button */}
+          {biometricAvailable && biometricEnabled && (
+            <Button
+              variant="outline"
+              onPress={handleBiometricLogin}
+              isLoading={isLoading}
+              isDisabled={isLoading}
+              size="lg"
+              leftIcon={<Icon as={MaterialIcons} name="fingerprint" />}
+            >
+              Sign In with Biometrics
+            </Button>
+          )}
+
+          {/* Biometric Setup Info */}
+          {biometricAvailable && !biometricEnabled && (
+            <Box p={3} bg="blue.50" borderRadius="md">
+              <HStack space={2} alignItems="center">
+                <Icon as={MaterialIcons} name="info" color="blue.600" />
+                <Text fontSize="sm" color="blue.700" flex={1}>
+                  Enable biometric login in your profile after signing in
+                </Text>
+              </HStack>
+            </Box>
+          )}
 
           {/* Divider */}
           <Box flexDirection="row" alignItems="center" my={4}>

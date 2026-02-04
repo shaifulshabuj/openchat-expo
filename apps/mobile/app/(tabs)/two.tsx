@@ -14,11 +14,13 @@ import {
   Icon,
   AlertDialog,
   ScrollView,
+  Switch,
 } from 'native-base';
 import { MaterialIcons } from '@expo/vector-icons';
 import { useAuth } from '../../src/contexts/AuthContext';
 import { useRouter } from 'expo-router';
 import { trpcClient } from '../../utils/trpc';
+import { BiometricService } from '../../src/lib/biometric';
 
 export default function ProfileScreen() {
   const { user, logout, refreshUser } = useAuth();
@@ -35,6 +37,11 @@ export default function ProfileScreen() {
   const [deletePassword, setDeletePassword] = useState('');
   const [isDeleting, setIsDeleting] = useState(false);
 
+  // Biometric state
+  const [biometricAvailable, setBiometricAvailable] = useState(false);
+  const [biometricEnabled, setBiometricEnabled] = useState(false);
+  const [biometricType, setBiometricType] = useState('');
+
   const cancelRef = React.useRef(null);
 
   useEffect(() => {
@@ -43,7 +50,19 @@ export default function ProfileScreen() {
       setBio(user.bio || '');
       setAvatar(user.avatar || '');
     }
+    checkBiometricAvailability();
   }, [user]);
+
+  const checkBiometricAvailability = async () => {
+    const status = await BiometricService.getBiometricStatus();
+    setBiometricAvailable(status.available);
+    setBiometricType(status.message);
+
+    if (status.available) {
+      const enabled = await BiometricService.isBiometricLoginEnabled();
+      setBiometricEnabled(enabled);
+    }
+  };
 
   const handleSaveProfile = async () => {
     if (!user) return;
@@ -126,6 +145,44 @@ export default function ProfileScreen() {
       });
     } finally {
       setIsDeleting(false);
+    }
+  };
+
+  const handleToggleBiometric = async (value: boolean) => {
+    try {
+      if (value) {
+        // Authenticate before enabling
+        const result = await BiometricService.authenticate(
+          'Verify your identity to enable biometric login'
+        );
+
+        if (!result.success) {
+          toast.show({
+            description: result.error || 'Biometric authentication failed',
+            placement: 'top',
+          });
+          return;
+        }
+
+        await BiometricService.setBiometricLoginEnabled(true);
+        setBiometricEnabled(true);
+        toast.show({
+          description: 'Biometric login enabled successfully!',
+          placement: 'top',
+        });
+      } else {
+        await BiometricService.setBiometricLoginEnabled(false);
+        setBiometricEnabled(false);
+        toast.show({
+          description: 'Biometric login disabled',
+          placement: 'top',
+        });
+      }
+    } catch (error: any) {
+      toast.show({
+        description: error.message || 'Failed to toggle biometric login',
+        placement: 'top',
+      });
     }
   };
 
@@ -274,6 +331,30 @@ export default function ProfileScreen() {
                   </Text>
                 </Box>
               </VStack>
+
+              {/* Biometric Login Toggle */}
+              {biometricAvailable && (
+                <Box mt={4} p={4} bg="gray.50" borderRadius="md">
+                  <HStack justifyContent="space-between" alignItems="center">
+                    <VStack flex={1}>
+                      <HStack space={2} alignItems="center">
+                        <Icon as={MaterialIcons} name="fingerprint" size="sm" color="gray.700" />
+                        <Text fontSize="md" fontWeight="medium">
+                          Biometric Login
+                        </Text>
+                      </HStack>
+                      <Text fontSize="xs" color="gray.600" mt={1}>
+                        {biometricType}
+                      </Text>
+                    </VStack>
+                    <Switch
+                      isChecked={biometricEnabled}
+                      onToggle={handleToggleBiometric}
+                      colorScheme="blue"
+                    />
+                  </HStack>
+                </Box>
+              )}
 
               {/* Action Buttons */}
               <VStack space={3} mt={6}>
