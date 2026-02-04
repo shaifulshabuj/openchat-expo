@@ -10,6 +10,7 @@ import '../global.css';
 
 import { useColorScheme } from '@/components/useColorScheme';
 import { AuthProvider } from '../src/contexts/AuthContext';
+import { SocketProvider } from '../src/contexts/SocketContext';
 
 export {
   // Catch any errors thrown by the Layout component.
@@ -54,12 +55,14 @@ function RootLayoutNav() {
   return (
     <NativeBaseProvider>
       <AuthProvider>
-        <ThemeProvider value={colorScheme === 'dark' ? DarkTheme : DefaultTheme}>
-          <Stack>
-            <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
-            <Stack.Screen name="modal" options={{ presentation: 'modal' }} />
-          </Stack>
-        </ThemeProvider>
+        <SocketProvider>
+          <ThemeProvider value={colorScheme === 'dark' ? DarkTheme : DefaultTheme}>
+            <Stack>
+              <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
+              <Stack.Screen name="modal" options={{ presentation: 'modal' }} />
+            </Stack>
+          </ThemeProvider>
+        </SocketProvider>
       </AuthProvider>
     </NativeBaseProvider>
   );
