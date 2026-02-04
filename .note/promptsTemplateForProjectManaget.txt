@@ -1,6 +1,0 @@
-Here is the reply/progress/questions from master-copilot-agent while working in phase 1 - as below
-<<<<----
-
----->>>>
-based on above, check and make reply for master-copilot-agent to continue work
-----------
