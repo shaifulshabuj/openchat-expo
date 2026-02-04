@@ -7,10 +7,11 @@
 ## 📖 Key Documents
 
 ### ⭐ Start Here
-1. **`CODEX_CLI_USAGE.md`** - Complete Codex CLI reference (NEW!)
-2. **`instructions/ORCHESTRATOR.md`** - 7-phase workflow
-3. **`CODEX_WORKFLOW.md`** - Delegation & error handling
-4. **`skills/SKILL_INDEX.md`** - Which skill for which task
+1. **`../.github/copilot.instructions.md`** - Main instructions (in .github/)
+2. **`CODEX_CLI_USAGE.md`** - Complete Codex CLI reference
+3. **`instructions/ORCHESTRATOR.md`** - 7-phase workflow
+4. **`CODEX_WORKFLOW.md`** - Delegation & error handling
+5. **`skills/SKILL_INDEX.md`** - Which skill for which task
 
 ### Quick Reference
 - **CODEX_CLI_USAGE.md** - How to use Codex effectively

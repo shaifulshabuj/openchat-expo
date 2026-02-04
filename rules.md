@@ -657,7 +657,7 @@ model User {
 If you're unsure whether something breaks a rule:
 
 1. **Check this document** - Most cases are covered
-2. **Check `copilot.instruction.md`** - For workflow guidance
+2. **Check `.github/copilot.instructions.md`** - For workflow guidance
 3. **Check `AGENT.md`** - For behavior guidance
 4. **Err on the side of caution** - Follow the strictest interpretation
 5. **Document your decision** - Explain in commit message

@@ -10,7 +10,7 @@
 
 ### 3 Master Documents (49KB total):
 
-1. **`copilot.instruction.md`** (17KB)
+1. **`.github/copilot.instructions.md`** (17KB)
    - Main instructions for GitHub Copilot orchestrator
    - Complete 7-phase workflow protocol
    - Task decomposition guidelines
@@ -41,7 +41,7 @@
 
 ## �� DOCUMENT STRUCTURE
 
-### copilot.instruction.md
+### .github/copilot.instructions.md
 
 **Primary Directives:**
 1. Always break down into small tasks (1-5 min, 1-3 files)
@@ -279,7 +279,7 @@ tmp/
 ## ✅ CHECKLIST FOR EVERY TASK
 
 **Before Starting:**
-- [ ] Read copilot.instruction.md section relevant to task
+- [ ] Read .github/copilot.instructions.md section relevant to task
 - [ ] Check rules.md for applicable rules
 - [ ] Run PHASE 0: DISCOVER (check priorities, progress, git status)
 - [ ] Decompose task if >5 minutes
@@ -312,7 +312,7 @@ tmp/
 ### For GitHub Copilot (Orchestrator):
 
 **Every Session:**
-1. Read `copilot.instruction.md` - Main workflow
+1. Read `.github/copilot.instructions.md` - Main workflow
 2. Consult `rules.md` when making decisions
 3. Follow `AGENT.md` behavior guidelines
 4. Run PHASE 0: DISCOVER before any work
@@ -346,8 +346,8 @@ codex exec --full-auto -C /path/to/openchat-expo \
 
 Check:
 1. All rules followed? (rules.md)
-2. Documentation updated? (copilot.instruction.md)
-3. Quality gates passed? (copilot.instruction.md)
+2. Documentation updated? (.github/copilot.instructions.md)
+3. Quality gates passed? (.github/copilot.instructions.md)
 4. Patterns consistent? (AGENT.md)
 5. Communication clear? (AGENT.md)
 
@@ -390,7 +390,7 @@ Check:
 
 ### Hierarchy:
 ```
-copilot.instruction.md (TOP LEVEL - Read first)
+.github/copilot.instructions.md (TOP LEVEL - Read first)
 ├── rules.md (Constraints - Check always)
 ├── AGENT.md (Behavior - Follow always)
 └── .copilot/
@@ -460,9 +460,9 @@ With these master documents, the OpenChat Expo development system is:
 
 ```bash
 # 1. Read master documents (one time)
-cat copilot.instruction.md  # Main instructions
-cat rules.md                # Rules to follow
-cat AGENT.md                # How to behave
+cat .github/copilot.instructions.md  # Main instructions
+cat rules.md                          # Rules to follow
+cat AGENT.md                          # How to behave
 
 # 2. Every session, run DISCOVER
 cat .copilot/works/codex_next_priorities.md
@@ -496,7 +496,7 @@ git push origin main
 ---
 
 **Created:** February 4, 2026 13:40 JST  
-**Documents:** copilot.instruction.md, rules.md, AGENT.md  
+**Documents:** .github/copilot.instructions.md, rules.md, AGENT.md  
 **Total Size:** 49KB  
 **Status:** ✅ ACTIVE AND ENFORCED  
 **Ready For:** Phase 0.B and entire 77-feature migration

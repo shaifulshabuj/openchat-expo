@@ -590,7 +590,7 @@ codex exec --full-auto -C /Volumes/SATECHI_WD_BLACK_2/openchat-expo \
 ## 🚀 SESSION MANAGEMENT
 
 ### Start of Session:
-1. Read `copilot.instruction.md` (this file)
+1. Read `.github/copilot.instructions.md` (this file)
 2. Read `rules.md` for constraints
 3. Read `AGENT.md` for behavior guidelines
 4. Run PHASE 0: DISCOVER
@@ -660,7 +660,7 @@ Track these in `.copilot/works/codex_metrics.md`:
 
 | Document | Purpose | When to Read |
 |----------|---------|--------------|
-| `copilot.instruction.md` | Main instructions | Every session start |
+| `.github/copilot.instructions.md` | Main instructions | Every session start |
 | `rules.md` | Development rules | When in doubt |
 | `AGENT.md` | Agent behavior | Before first task |
 | `.copilot/instructions/ORCHESTRATOR.md` | 7-phase workflow | Every session |
