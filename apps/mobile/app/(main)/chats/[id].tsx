@@ -7,6 +7,7 @@ import ChatHeader from '../../../src/components/chat/ChatHeader';
 import MessageBubble from '../../../src/components/chat/MessageBubble';
 import MessageDateSeparator from '../../../src/components/chat/MessageDateSeparator';
 import TypingIndicator from '../../../src/components/chat/TypingIndicator';
+import MessageInput from '../../../src/components/chat/MessageInput';
 import { useAuth } from '../../../src/contexts/AuthContext';
 import { useSocketEvents } from '../../../src/hooks/useSocketEvents';
 
@@ -167,6 +168,16 @@ export default function ChatScreen() {
     // TODO: Implement pagination with cursor
   };
 
+  const handleMessageSent = (message: any) => {
+    // Add message to list (optimistic update)
+    setMessages((prev) => [...prev, message]);
+    
+    // Auto-scroll to bottom
+    setTimeout(() => {
+      flatListRef.current?.scrollToOffset({ offset: 0, animated: true });
+    }, 100);
+  };
+
   const renderItem = ({ item, index }: { item: any; index: number }) => {
     if (item.type === 'date') {
       return <MessageDateSeparator date={item.data} />;
@@ -236,7 +247,7 @@ export default function ChatScreen() {
           }
         />
 
-        {/* Message input will be added in Task 39 */}
+        <MessageInput conversationId={conversationId!} onMessageSent={handleMessageSent} />
       </VStack>
     </KeyboardAvoidingView>
   );
