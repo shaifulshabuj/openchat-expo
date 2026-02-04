@@ -370,8 +370,8 @@ cat .copilot/prompts/CODEX_XXX_YYYYMMDD.prompts.md
 ├── CODEX_README.md (Codex CLI tasks guide)
 │
 ├── Master Prompts (Copilot):
-│   ├── 001_20260204.md (Phase 0.B: Scaffolding)
-│   ├── 002_20260207.md (Phase 1: Auth System)
+│   ├── 001_20260204.prompts.md (Phase 0.B: Scaffolding)
+│   ├── 002_20260207.prompts.md (Phase 1: Auth System)
 │   ├── 003_20260214.md (Phase 2: Messaging)
 │   └── ...
 │
@@ -422,7 +422,7 @@ echo "$(grep -l "Status: COMPLETE" .copilot/prompts/[0-9]*.md | wc -l) / $(ls -1
 ### Related Codex Tasks:
 ```bash
 # From master prompt, list related Codex tasks
-grep "CODEX_" .copilot/prompts/001_20260204.md
+grep "CODEX_" .copilot/prompts/001_20260204.prompts.md
 
 # Check their status
 grep -l "Status: COMPLETE" .copilot/prompts/CODEX_*.prompts.md
