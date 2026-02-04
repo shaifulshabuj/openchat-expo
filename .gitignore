@@ -74,3 +74,4 @@ Thumbs.db
 # Prisma
 prisma/migrations/
 .notes/*
+command_notes.md
