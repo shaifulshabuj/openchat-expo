@@ -6,6 +6,8 @@ import { PrismaService } from '../prisma/prisma.service';
 import { PasswordService } from '../auth/password.service';
 import { EmailService } from '../auth/email.service';
 import { SessionService } from '../auth/session.service';
+import { MessageService } from '../message/message.service';
+import { createMessageRouter } from '../message/message.router';
 import { JwtService } from '@nestjs/jwt';
 
 // Initialize services
@@ -17,6 +19,7 @@ const jwtService = new JwtService({
   secret: process.env.JWT_SECRET || 'dev-secret-change-in-production',
 });
 const authService = new AuthService(prismaService, passwordService, jwtService, emailService, sessionService);
+const messageService = new MessageService(prismaService);
 
 export const appRouter = router({
   health: publicProcedure.query(() => {
@@ -36,6 +39,7 @@ export const appRouter = router({
     }),
 
   auth: createAuthRouter(authService, sessionService),
+  message: createMessageRouter(messageService),
 });
 
 export type AppRouter = typeof appRouter;
