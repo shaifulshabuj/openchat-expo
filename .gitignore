@@ -75,3 +75,4 @@ Thumbs.db
 prisma/migrations/
 .notes/*
 command_notes.md
+.secret
