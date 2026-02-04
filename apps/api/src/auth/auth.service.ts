@@ -52,7 +52,7 @@ export class AuthService {
       data: {
         email: validatedInput.email,
         username: validatedInput.username,
-        passwordHash: hashedPassword,
+        password: hashedPassword,
         displayName: validatedInput.displayName || validatedInput.username,
         status: 'OFFLINE',
       },
@@ -96,7 +96,7 @@ export class AuthService {
     // Validate password
     const isPasswordValid = await this.passwordService.validatePassword(
       validatedInput.password,
-      user.passwordHash,
+      user.password,
     );
 
     if (!isPasswordValid) {
@@ -132,7 +132,7 @@ export class AuthService {
         email: user.email,
         username: user.username,
         displayName: user.displayName,
-        avatarUrl: user.avatarUrl,
+        avatar: user.avatar,
         status: 'ONLINE',
       },
       tokens: {

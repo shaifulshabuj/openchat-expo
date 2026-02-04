@@ -1,5 +1,5 @@
 import { Controller, All, Req, Res } from '@nestjs/common';
-import { Request, Response } from 'express';
+import type { Request, Response } from 'express';
 import * as trpcExpress from '@trpc/server/adapters/express';
 import { appRouter } from './router';
 
@@ -11,6 +11,9 @@ export class TrpcController {
       router: appRouter,
     });
     
-    return handler(req, res);
+    // Call the middleware with next function
+    handler(req, res, (err?: any) => {
+      if (err) throw err;
+    });
   }
 }
