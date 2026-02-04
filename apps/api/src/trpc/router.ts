@@ -12,7 +12,17 @@ import { SocketService } from '../socket/socket.service';
 import { SocketGateway } from '../socket/socket.gateway';
 import { createMessageRouter } from '../message/message.router';
 import { createReactionRouter } from '../reaction/reaction.router';
+import { createOfflineQueueRouter } from '../offline-queue/offline-queue.router';
+import { OfflineQueueService } from '../offline-queue/offline-queue.service';
 import { JwtService } from '@nestjs/jwt';
+import Redis from 'ioredis';
+
+// Initialize Redis client
+const redis = new Redis({
+  host: process.env.REDIS_HOST || 'localhost',
+  port: parseInt(process.env.REDIS_PORT || '6379'),
+  password: process.env.REDIS_PASSWORD || undefined,
+});
 
 // Initialize services
 const prismaService = new PrismaService();
@@ -24,8 +34,9 @@ const jwtService = new JwtService({
 });
 const socketGateway = new SocketGateway(jwtService, prismaService);
 const socketService = new SocketService(socketGateway);
+const offlineQueueService = new OfflineQueueService(redis);
 const authService = new AuthService(prismaService, passwordService, jwtService, emailService, sessionService);
-const messageService = new MessageService(prismaService, socketService);
+const messageService = new MessageService(prismaService, socketService, offlineQueueService);
 const reactionService = new ReactionService(prismaService, socketService);
 
 export const appRouter = router({
@@ -48,6 +59,7 @@ export const appRouter = router({
   auth: createAuthRouter(authService, sessionService),
   message: createMessageRouter(messageService),
   reaction: createReactionRouter(reactionService),
+  offlineQueue: createOfflineQueueRouter(offlineQueueService),
 });
 
 export type AppRouter = typeof appRouter;

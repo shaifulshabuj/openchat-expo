@@ -1,6 +1,7 @@
 import { Injectable } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
 import { SocketService } from '../socket/socket.service';
+import { OfflineQueueService } from '../offline-queue/offline-queue.service';
 import { MessageType } from '@prisma/client';
 
 @Injectable()
@@ -8,6 +9,7 @@ export class MessageService {
   constructor(
     private readonly prisma: PrismaService,
     private readonly socketService: SocketService,
+    private readonly offlineQueueService: OfflineQueueService,
   ) {}
 
   /**
@@ -97,6 +99,28 @@ export class MessageService {
         });
       }
     }
+
+    // Queue message for offline users
+    const members = await this.prisma.conversationMember.findMany({
+      where: { conversationId: input.conversationId },
+      select: { userId: true },
+    });
+
+    const offlineUserIds = members
+      .map((m) => m.userId)
+      .filter((uid) => uid !== input.senderId); // Exclude sender
+
+    // Queue for all participants (Socket.io will handle online delivery)
+    await this.offlineQueueService.queueForOfflineUsers(offlineUserIds, {
+      id: message.id,
+      conversationId: message.conversationId,
+      senderId: message.senderId,
+      content: message.content,
+      type: message.type,
+      mediaUrl: message.mediaUrl,
+      createdAt: message.createdAt.toISOString(),
+      attempts: 0,
+    });
 
     return message;
   }

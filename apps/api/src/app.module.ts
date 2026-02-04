@@ -10,6 +10,7 @@ import { SocketModule } from './socket/socket.module';
 import { MessageModule } from './message/message.module';
 import { ReactionModule } from './reaction/reaction.module';
 import { MediaModule } from './media/media.module';
+import { OfflineQueueModule } from './offline-queue/offline-queue.module';
 
 @Module({
   imports: [
@@ -23,6 +24,7 @@ import { MediaModule } from './media/media.module';
     MessageModule,
     ReactionModule,
     MediaModule,
+    OfflineQueueModule,
   ],
   controllers: [AppController, TrpcController],
   providers: [AppService],
