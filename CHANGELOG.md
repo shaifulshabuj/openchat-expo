@@ -7,6 +7,37 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.2.0-alpha.1] - 2026-02-04
+
+### Added - Phase 1 Task 13: Environment Configuration & Database Setup
+**Environment Configuration:**
+- Created .env.example files with all required variables for API and mobile
+- Updated .env with JWT_SECRET, REFRESH_TOKEN_SECRET
+- Configured SMTP settings for email functionality
+- Set CORS_ORIGIN for local development
+- Added FRONTEND_URL for email link generation
+
+**Database Setup:**
+- Started Docker PostgreSQL 15 and Redis 7 services
+- Applied Prisma migrations creating 14 database tables
+- Installed dotenv for Prisma 7.3 compatibility
+
+**Tables Created:**
+- User, Message, Conversation, ConversationMember
+- Friendship, FriendRequest, Attachment, ReadReceipt  
+- Reaction, Notification, BlockedUser, Device
+- Session, Settings
+
+### Verified
+- Docker containers running and healthy
+- Database connection successful  
+- All 14 Prisma migrations applied
+- Prisma schema compatible with Prisma 7.3
+
+### Phase Progress
+- Phase 1: Authentication & User Management - Task 1/15 complete (6.7%)
+- Ready for Task 14: JWT Authentication Module
+
 ## [0.1.0] - 2026-02-04
 
 ### Added - Phase 0.B Complete: Project Scaffolding
