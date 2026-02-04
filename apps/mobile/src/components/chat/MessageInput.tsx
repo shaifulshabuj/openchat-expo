@@ -1,9 +1,11 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { TextInput, KeyboardAvoidingView, Platform } from 'react-native';
-import { HStack, VStack, IconButton, useToast, Icon, Spinner } from 'native-base';
+import { HStack, VStack, IconButton, useToast, Icon, Spinner, Progress, Text } from 'native-base';
 import { MaterialIcons } from '@expo/vector-icons';
 import { trpcClient } from '@/utils/trpc';
 import { useSocket } from '@/src/contexts/SocketContext';
+import { MediaPicker } from './MediaPicker';
+import { uploadMedia, UploadProgress } from '../../lib/mediaUpload';
 
 interface MessageInputProps {
   conversationId: string;
@@ -14,6 +16,7 @@ export default function MessageInput({ conversationId, onMessageSent }: MessageI
   const [text, setText] = useState('');
   const [inputHeight, setInputHeight] = useState(40);
   const [isSending, setIsSending] = useState(false);
+  const [uploadProgress, setUploadProgress] = useState<number | null>(null);
   const typingTimeoutRef = useRef<NodeJS.Timeout | null>(null);
   const toast = useToast();
   const { socket } = useSocket();
@@ -85,20 +88,42 @@ export default function MessageInput({ conversationId, onMessageSent }: MessageI
     setInputHeight(Math.min(Math.max(40, height), 100));
   };
 
-  const handleCameraPress = () => {
-    // TODO: Implement in Task 40
-    toast.show({
-      description: 'Camera feature coming in Task 40!',
-      duration: 2000,
-    });
-  };
+  const handleMediaSelected = async (media: {
+    uri: string;
+    type: 'IMAGE' | 'VIDEO';
+    fileSize: number;
+    fileName: string;
+  }) => {
+    setIsSending(true);
+    setUploadProgress(0);
 
-  const handleGalleryPress = () => {
-    // TODO: Implement in Task 40
-    toast.show({
-      description: 'Gallery feature coming in Task 40!',
-      duration: 2000,
-    });
+    try {
+      // Upload media with progress tracking
+      const uploadResult = await uploadMedia(media.uri, media.type, (progress: UploadProgress) => {
+        setUploadProgress(progress.percentage);
+      });
+
+      // Send message with media URL
+      const message = await trpcClient.message.send.mutate({
+        conversationId,
+        content: media.type === 'IMAGE' ? '📷 Image' : '🎥 Video',
+        type: media.type,
+        mediaUrl: uploadResult.url,
+        senderId: '',
+      });
+
+      onMessageSent?.(message);
+      setUploadProgress(null);
+    } catch (error) {
+      console.error('Failed to send media:', error);
+      toast.show({
+        description: 'Failed to send media. Please try again.',
+        duration: 3000,
+      });
+      setUploadProgress(null);
+    } finally {
+      setIsSending(false);
+    }
   };
 
   const handleFilePress = () => {
@@ -114,6 +139,14 @@ export default function MessageInput({ conversationId, onMessageSent }: MessageI
       behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
       keyboardVerticalOffset={Platform.OS === 'ios' ? 90 : 0}
     >
+      {uploadProgress !== null && (
+        <VStack px={4} py={2} bg="white">
+          <Text fontSize="xs" color="gray.600" mb={1}>
+            Uploading... {uploadProgress}%
+          </Text>
+          <Progress value={uploadProgress} size="sm" colorScheme="primary" />
+        </VStack>
+      )}
       <HStack
         p={2}
         bg="white"
@@ -123,29 +156,14 @@ export default function MessageInput({ conversationId, onMessageSent }: MessageI
         space={2}
       >
         {/* Media attachment buttons */}
-        <HStack space={1}>
-          <IconButton
-            icon={<Icon as={MaterialIcons} name="camera-alt" size="md" color="gray.600" />}
-            onPress={handleCameraPress}
-            isDisabled={isSending}
-            variant="ghost"
-            size="sm"
-          />
-          <IconButton
-            icon={<Icon as={MaterialIcons} name="photo" size="md" color="gray.600" />}
-            onPress={handleGalleryPress}
-            isDisabled={isSending}
-            variant="ghost"
-            size="sm"
-          />
-          <IconButton
-            icon={<Icon as={MaterialIcons} name="attach-file" size="md" color="gray.600" />}
-            onPress={handleFilePress}
-            isDisabled={isSending}
-            variant="ghost"
-            size="sm"
-          />
-        </HStack>
+        <MediaPicker onMediaSelected={handleMediaSelected} disabled={isSending} />
+        <IconButton
+          icon={<Icon as={MaterialIcons} name="attach-file" size="md" color="gray.600" />}
+          onPress={handleFilePress}
+          isDisabled={isSending}
+          variant="ghost"
+          size="sm"
+        />
 
         {/* Text input */}
         <VStack flex={1}>

@@ -2,6 +2,7 @@ import React from 'react';
 import { Box, HStack, VStack, Text, Avatar, Icon } from 'native-base';
 import { MaterialIcons } from '@expo/vector-icons';
 import { format, formatDistanceToNow } from 'date-fns';
+import { MediaMessage } from './MediaMessage';
 
 type MessageType = 'TEXT' | 'IMAGE' | 'VIDEO' | 'FILE' | 'VOICE';
 
@@ -100,6 +101,11 @@ export default function MessageBubble({
                 <Text color="white" fontSize="md">
                   {message.content}
                 </Text>
+              ) : message.type === 'IMAGE' || message.type === 'VIDEO' ? (
+                <MediaMessage
+                  mediaUrl={message.mediaUrl || ''}
+                  type={message.type}
+                />
               ) : (
                 <Box color="white">{getMessagePreview()}</Box>
               )}
@@ -149,6 +155,11 @@ export default function MessageBubble({
               <Text color="gray.800" fontSize="md">
                 {message.content}
               </Text>
+            ) : message.type === 'IMAGE' || message.type === 'VIDEO' ? (
+              <MediaMessage
+                mediaUrl={message.mediaUrl || ''}
+                type={message.type}
+              />
             ) : (
               <Box color="gray.800">{getMessagePreview()}</Box>
             )}
