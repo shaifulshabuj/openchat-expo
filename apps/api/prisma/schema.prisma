@@ -47,21 +47,38 @@ model User {
 // 2. Message Model
 model Message {
   id             String          @id @default(cuid())
-  content        String
+  content        String?         // Nullable for media-only messages
   type           MessageType     @default(TEXT)
   status         MessageStatus   @default(SENT)
   conversationId String
   senderId       String
   replyToId      String?
+  forwardedFromId String?        // For forwarded messages
+  editedAt       DateTime?       // Track when message was edited
+  deletedAt      DateTime?       // Soft delete
+  deliveredAt    DateTime?       // Delivery timestamp
+  seenAt         DateTime?       // Read timestamp
   createdAt      DateTime        @default(now())
   updatedAt      DateTime        @updatedAt
-  deletedAt      DateTime?
+  
+  // Media fields
+  mediaUrl          String?       // S3/Cloudinary URL
+  mediaType         String?       // image/video/file/voice
+  mediaSize         Int?          // File size in bytes
+  mediaThumbnailUrl String?       // Thumbnail for images/videos
+  mediaDuration     Int?          // Duration for voice/video (seconds)
+  
+  // Metadata
+  mentions          String[]      // Array of mentioned user IDs
+  isPinned          Boolean       @default(false)
   
   // Relations
   conversation   Conversation    @relation(fields: [conversationId], references: [id], onDelete: Cascade)
   sender         User            @relation("UserMessages", fields: [senderId], references: [id], onDelete: Cascade)
-  replyTo        Message?        @relation("MessageReplies", fields: [replyToId], references: [id])
+  replyTo        Message?        @relation("MessageReplies", fields: [replyToId], references: [id], onDelete: SetNull)
   replies        Message[]       @relation("MessageReplies")
+  forwardedFrom  Message?        @relation("MessageForwards", fields: [forwardedFromId], references: [id], onDelete: SetNull)
+  forwards       Message[]       @relation("MessageForwards")
   attachments    Attachment[]
   readReceipts   ReadReceipt[]
   reactions      Reaction[]
@@ -69,23 +86,26 @@ model Message {
   @@index([conversationId])
   @@index([senderId])
   @@index([createdAt])
+  @@index([deletedAt])
 }
 
 // 3. Conversation Model
 model Conversation {
-  id          String               @id @default(cuid())
-  type        ConversationType     @default(DIRECT)
-  name        String?
-  description String?
-  avatar      String?
-  createdAt   DateTime             @default(now())
-  updatedAt   DateTime             @updatedAt
+  id            String               @id @default(cuid())
+  type          ConversationType     @default(DIRECT)
+  name          String?
+  description   String?
+  avatar        String?
+  lastMessageAt DateTime?            // Track last message timestamp
+  createdAt     DateTime             @default(now())
+  updatedAt     DateTime             @updatedAt
   
   // Relations
-  messages    Message[]
-  members     ConversationMember[]
+  messages      Message[]
+  members       ConversationMember[]
   
   @@index([type])
+  @@index([lastMessageAt])
 }
 
 // 4. ConversationMember Model
@@ -96,6 +116,7 @@ model ConversationMember {
   role           MemberRole   @default(MEMBER)
   joinedAt       DateTime     @default(now())
   leftAt         DateTime?
+  lastReadAt     DateTime?    // Track when user last read messages
   mutedUntil     DateTime?
   
   // Relations
@@ -272,7 +293,7 @@ enum MessageType {
   TEXT
   IMAGE
   VIDEO
-  AUDIO
+  VOICE
   FILE
   LOCATION
   SYSTEM
