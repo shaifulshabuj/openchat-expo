@@ -379,6 +379,58 @@ echo "⚠️ Codex unavailable, executed manually" >> .copilot/works/codex_work_
 
 ---
 
+### **Scenario 6: Codex API Error (403/401/500)**
+
+**Symptoms:** `Request failed with status 403 Forbidden` or similar API errors
+
+**Root Causes:**
+- Codex API endpoint configuration issue
+- Authentication token expired/invalid
+- API service temporarily unavailable
+- Network connectivity problems
+
+**Recovery:**
+```bash
+# 1. Check Codex configuration
+cat ~/.config/codex/config.json  # or wherever config is stored
+
+# 2. Try to reconfigure Codex
+codex config --reset
+codex login  # Re-authenticate if needed
+
+# 3. Test with simple command
+echo "test" | codex apply "echo this back"
+
+# 4. If still failing, switch to manual execution
+# This is the primary fallback - always works
+
+# 5. Execute task manually with GitHub Copilot
+# Use the same task description as Codex command
+# Follow same quality gates for verification
+
+# 6. Document in progress log
+cat >> .copilot/works/codex_work_progress_and_reply.md << EOF
+**Codex API Error:**
+- Error: [specific error message]
+- Recovery: Manual execution with GitHub Copilot
+- Task completed successfully via fallback
+EOF
+
+# 7. Update metrics
+# Increment manual fallback counter in codex_metrics.md
+```
+
+**Prevention:**
+- Test Codex before starting major work session
+- Have GitHub Copilot as primary assistant (Codex is helper)
+- Keep manual execution procedure documented
+- Don't depend solely on Codex availability
+
+**Key Insight:**
+The 7-phase workflow works with OR without Codex. Quality gates are tool-agnostic. Manual execution with GitHub Copilot assistance is always a viable path.
+
+---
+
 ## 📊 TASK TRACKING TEMPLATE
 
 Use this template in `.copilot/works/codex_next_priorities.md`:
