@@ -62,3 +62,88 @@ export const uploadMedia = async (
     throw new Error('Failed to upload media. Please try again.');
   }
 };
+
+export const uploadFile = async (
+  uri: string,
+  fileName: string,
+  mimeType: string,
+  onProgress?: (progress: UploadProgress) => void
+): Promise<UploadResult> => {
+  const formData = new FormData();
+  
+  formData.append('file', {
+    uri,
+    name: fileName,
+    type: mimeType,
+  } as any);
+
+  try {
+    const response = await axios.post(`${API_URL}/media/upload`, formData, {
+      headers: {
+        'Content-Type': 'multipart/form-data',
+      },
+      onUploadProgress: (progressEvent) => {
+        if (onProgress && progressEvent.total) {
+          const percentage = Math.round((progressEvent.loaded * 100) / progressEvent.total);
+          onProgress({
+            loaded: progressEvent.loaded,
+            total: progressEvent.total,
+            percentage,
+          });
+        }
+      },
+    });
+
+    return {
+      url: response.data.url,
+      fileSize: response.data.fileSize,
+      mimeType: response.data.mimeType,
+    };
+  } catch (error) {
+    console.error('File upload failed:', error);
+    throw new Error('Failed to upload file. Please try again.');
+  }
+};
+
+export const uploadVoice = async (
+  uri: string,
+  duration: number,
+  onProgress?: (progress: UploadProgress) => void
+): Promise<UploadResult> => {
+  const formData = new FormData();
+  
+  const fileName = `voice_${Date.now()}.m4a`;
+  formData.append('file', {
+    uri,
+    name: fileName,
+    type: 'audio/m4a',
+  } as any);
+
+  try {
+    const response = await axios.post(`${API_URL}/media/upload`, formData, {
+      headers: {
+        'Content-Type': 'multipart/form-data',
+      },
+      onUploadProgress: (progressEvent) => {
+        if (onProgress && progressEvent.total) {
+          const percentage = Math.round((progressEvent.loaded * 100) / progressEvent.total);
+          onProgress({
+            loaded: progressEvent.loaded,
+            total: progressEvent.total,
+            percentage,
+          });
+        }
+      },
+    });
+
+    return {
+      url: response.data.url,
+      fileSize: response.data.fileSize,
+      mimeType: 'audio/m4a',
+    };
+  } catch (error) {
+    console.error('Voice upload failed:', error);
+    throw new Error('Failed to upload voice message. Please try again.');
+  }
+};
+

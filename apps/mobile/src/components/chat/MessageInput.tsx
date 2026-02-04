@@ -5,7 +5,9 @@ import { MaterialIcons } from '@expo/vector-icons';
 import { trpcClient } from '@/utils/trpc';
 import { useSocket } from '@/src/contexts/SocketContext';
 import { MediaPicker } from './MediaPicker';
-import { uploadMedia, UploadProgress } from '../../lib/mediaUpload';
+import { VoiceRecorder } from './VoiceRecorder';
+import { DocumentPickerComponent } from './DocumentPickerComponent';
+import { uploadMedia, uploadFile, uploadVoice, UploadProgress } from '../../lib/mediaUpload';
 
 interface MessageInputProps {
   conversationId: string;
@@ -126,12 +128,76 @@ export default function MessageInput({ conversationId, onMessageSent }: MessageI
     }
   };
 
-  const handleFilePress = () => {
-    // TODO: Implement in Task 41
-    toast.show({
-      description: 'File attachment coming in Task 41!',
-      duration: 2000,
-    });
+  const handleDocumentSelected = async (doc: {
+    uri: string;
+    name: string;
+    size: number;
+    mimeType: string;
+  }) => {
+    setIsSending(true);
+    setUploadProgress(0);
+
+    try {
+      const uploadResult = await uploadFile(
+        doc.uri,
+        doc.name,
+        doc.mimeType,
+        (progress: UploadProgress) => {
+          setUploadProgress(progress.percentage);
+        }
+      );
+
+      const message = await trpcClient.message.send.mutate({
+        conversationId,
+        content: `📎 ${doc.name}`,
+        type: 'FILE',
+        mediaUrl: uploadResult.url,
+        senderId: '',
+      });
+
+      onMessageSent?.(message);
+      setUploadProgress(null);
+    } catch (error) {
+      console.error('Failed to send file:', error);
+      toast.show({
+        description: 'Failed to send file. Please try again.',
+        duration: 3000,
+      });
+      setUploadProgress(null);
+    } finally {
+      setIsSending(false);
+    }
+  };
+
+  const handleRecordingComplete = async (uri: string, duration: number) => {
+    setIsSending(true);
+    setUploadProgress(0);
+
+    try {
+      const uploadResult = await uploadVoice(uri, duration, (progress: UploadProgress) => {
+        setUploadProgress(progress.percentage);
+      });
+
+      const message = await trpcClient.message.send.mutate({
+        conversationId,
+        content: `🎤 Voice message (${Math.floor(duration / 60)}:${(duration % 60).toString().padStart(2, '0')})`,
+        type: 'VOICE',
+        mediaUrl: uploadResult.url,
+        senderId: '',
+      });
+
+      onMessageSent?.(message);
+      setUploadProgress(null);
+    } catch (error) {
+      console.error('Failed to send voice:', error);
+      toast.show({
+        description: 'Failed to send voice message. Please try again.',
+        duration: 3000,
+      });
+      setUploadProgress(null);
+    } finally {
+      setIsSending(false);
+    }
   };
 
   return (
@@ -157,13 +223,8 @@ export default function MessageInput({ conversationId, onMessageSent }: MessageI
       >
         {/* Media attachment buttons */}
         <MediaPicker onMediaSelected={handleMediaSelected} disabled={isSending} />
-        <IconButton
-          icon={<Icon as={MaterialIcons} name="attach-file" size="md" color="gray.600" />}
-          onPress={handleFilePress}
-          isDisabled={isSending}
-          variant="ghost"
-          size="sm"
-        />
+        <DocumentPickerComponent onDocumentSelected={handleDocumentSelected} disabled={isSending} />
+        <VoiceRecorder onRecordingComplete={handleRecordingComplete} disabled={isSending} />
 
         {/* Text input */}
         <VStack flex={1}>

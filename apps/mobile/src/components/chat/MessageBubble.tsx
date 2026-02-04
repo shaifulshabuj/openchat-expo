@@ -3,6 +3,8 @@ import { Box, HStack, VStack, Text, Avatar, Icon } from 'native-base';
 import { MaterialIcons } from '@expo/vector-icons';
 import { format, formatDistanceToNow } from 'date-fns';
 import { MediaMessage } from './MediaMessage';
+import { VoiceMessage } from './VoiceMessage';
+import { FileMessage } from './FileMessage';
 
 type MessageType = 'TEXT' | 'IMAGE' | 'VIDEO' | 'FILE' | 'VOICE';
 
@@ -106,6 +108,14 @@ export default function MessageBubble({
                   mediaUrl={message.mediaUrl || ''}
                   type={message.type}
                 />
+              ) : message.type === 'VOICE' ? (
+                <VoiceMessage audioUrl={message.mediaUrl || ''} />
+              ) : message.type === 'FILE' ? (
+                <FileMessage
+                  fileUrl={message.mediaUrl || ''}
+                  fileName={message.content || 'File'}
+                  fileSize={0}
+                />
               ) : (
                 <Box color="white">{getMessagePreview()}</Box>
               )}
@@ -159,6 +169,14 @@ export default function MessageBubble({
               <MediaMessage
                 mediaUrl={message.mediaUrl || ''}
                 type={message.type}
+              />
+            ) : message.type === 'VOICE' ? (
+              <VoiceMessage audioUrl={message.mediaUrl || ''} />
+            ) : message.type === 'FILE' ? (
+              <FileMessage
+                fileUrl={message.mediaUrl || ''}
+                fileName={message.content || 'File'}
+                fileSize={0}
               />
             ) : (
               <Box color="gray.800">{getMessagePreview()}</Box>
