@@ -1,14 +1,17 @@
 import { Injectable } from '@nestjs/common';
+import { JwtService } from '@nestjs/jwt';
 import { TRPCError } from '@trpc/server';
 import { PrismaService } from '../prisma/prisma.service';
 import { PasswordService } from './password.service';
 import { registerSchema, RegisterInput } from './dto/register.dto';
+import { loginSchema, LoginInput } from './dto/login.dto';
 
 @Injectable()
 export class AuthService {
   constructor(
     private readonly prisma: PrismaService,
     private readonly passwordService: PasswordService,
+    private readonly jwtService: JwtService,
   ) {}
 
   async register(input: RegisterInput) {
@@ -66,6 +69,89 @@ export class AuthService {
       success: true,
       message: 'Registration successful',
       user,
+    };
+  }
+
+  async login(input: LoginInput) {
+    // Validate input
+    const validatedInput = loginSchema.parse(input);
+
+    // Find user by email or username
+    const user = await this.prisma.user.findFirst({
+      where: {
+        OR: [
+          { email: validatedInput.identifier },
+          { username: validatedInput.identifier },
+        ],
+      },
+    });
+
+    if (!user) {
+      throw new TRPCError({
+        code: 'UNAUTHORIZED',
+        message: 'Invalid credentials',
+      });
+    }
+
+    // Validate password
+    const isPasswordValid = await this.passwordService.validatePassword(
+      validatedInput.password,
+      user.passwordHash,
+    );
+
+    if (!isPasswordValid) {
+      throw new TRPCError({
+        code: 'UNAUTHORIZED',
+        message: 'Invalid credentials',
+      });
+    }
+
+    // Generate access token (15 minutes)
+    const accessToken = this.jwtService.sign(
+      { userId: user.id, email: user.email },
+      { expiresIn: '15m' },
+    );
+
+    // Generate refresh token (7 days)
+    const refreshToken = this.jwtService.sign(
+      { userId: user.id, type: 'refresh' },
+      { expiresIn: '7d' },
+    );
+
+    // Update user status to ONLINE
+    await this.prisma.user.update({
+      where: { id: user.id },
+      data: { status: 'ONLINE', lastSeen: new Date() },
+    });
+
+    return {
+      success: true,
+      message: 'Login successful',
+      user: {
+        id: user.id,
+        email: user.email,
+        username: user.username,
+        displayName: user.displayName,
+        avatarUrl: user.avatarUrl,
+        status: 'ONLINE',
+      },
+      tokens: {
+        accessToken,
+        refreshToken,
+        expiresIn: 900, // 15 minutes in seconds
+      },
+    };
+  }
+
+  async logout(userId: string) {
+    await this.prisma.user.update({
+      where: { id: userId },
+      data: { status: 'OFFLINE', lastSeen: new Date() },
+    });
+
+    return {
+      success: true,
+      message: 'Logout successful',
     };
   }
 }
