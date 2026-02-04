@@ -1,5 +1,14 @@
 import { router, publicProcedure } from './trpc';
 import { z } from 'zod';
+import { createAuthRouter } from '../auth/auth.router';
+import { AuthService } from '../auth/auth.service';
+import { PrismaService } from '../prisma/prisma.service';
+import { PasswordService } from '../auth/password.service';
+
+// Initialize services
+const prismaService = new PrismaService();
+const passwordService = new PasswordService();
+const authService = new AuthService(prismaService, passwordService);
 
 export const appRouter = router({
   health: publicProcedure.query(() => {
@@ -17,6 +26,8 @@ export const appRouter = router({
         greeting: `Hello ${input.name ?? 'World'}!`,
       };
     }),
+
+  auth: createAuthRouter(authService),
 });
 
 export type AppRouter = typeof appRouter;
