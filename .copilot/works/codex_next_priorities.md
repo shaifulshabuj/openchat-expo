@@ -70,3 +70,46 @@
 ---
 
 **Next Update:** After Phase 0.1 completion
+
+---
+
+## 🧪 TEST TASK (DEMO)
+
+### Task 0.TEST: Create EAS Build Configuration
+**Status:** 🎯 READY TO START  
+**Type:** Configuration  
+**Files:** apps/mobile/eas.json (NEW)  
+**Estimated:** 5 minutes  
+**Purpose:** Demonstrate and validate Codex workflow
+
+**Objective:**
+Create eas.json configuration file for EAS Build with preview and production profiles.
+
+**Codex Command:**
+```bash
+codex apply "Create apps/mobile/eas.json configuration file. Include 'preview' profile for internal testing (internal distribution) and 'production' profile for app store releases (store distribution). Configure for iOS and Android. Use environment variables for sensitive config. Follow EAS best practices from https://docs.expo.dev/build/eas-json/"
+```
+
+**Success Criteria:**
+- [ ] apps/mobile/eas.json exists
+- [ ] Valid JSON syntax
+- [ ] Has preview profile (internal distribution)
+- [ ] Has production profile (store distribution)
+- [ ] Configured for iOS and Android
+
+**Quality Gates:**
+- [ ] JSON validates: `jq . < apps/mobile/eas.json`
+- [ ] No TypeScript errors
+- [ ] File follows EAS schema
+
+**Retry Count:** 0/3
+
+---
+
+## 📝 TEST LOG TEMPLATE
+
+After test task, record:
+- Did Codex complete successfully?
+- Were quality gates met?
+- Any issues encountered?
+- Workflow improvements needed?
