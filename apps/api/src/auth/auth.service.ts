@@ -4,10 +4,12 @@ import { TRPCError } from '@trpc/server';
 import { PrismaService } from '../prisma/prisma.service';
 import { PasswordService } from './password.service';
 import { EmailService } from './email.service';
+import { SessionService } from './session.service';
 import { registerSchema, RegisterInput } from './dto/register.dto';
 import { loginSchema, LoginInput } from './dto/login.dto';
 import { verifyEmailSchema, resendVerificationSchema, VerifyEmailInput, ResendVerificationInput } from './dto/verification.dto';
 import { requestPasswordResetSchema, resetPasswordSchema, RequestPasswordResetInput, ResetPasswordInput } from './dto/password-reset.dto';
+import { updateProfileSchema, UpdateProfileInput } from './dto/profile.dto';
 import * as crypto from 'crypto';
 
 @Injectable()
@@ -17,6 +19,7 @@ export class AuthService {
     private readonly passwordService: PasswordService,
     private readonly jwtService: JwtService,
     private readonly emailService: EmailService,
+    private readonly sessionService: SessionService,
   ) {}
 
   private generateToken(length: number = 32): string {
@@ -142,6 +145,17 @@ export class AuthService {
       { expiresIn: '7d' },
     );
 
+    // Create session
+    const sessionId = crypto.randomUUID();
+    await this.sessionService.createSession({
+      userId: user.id,
+      sessionId,
+      deviceInfo: (validatedInput as any).deviceInfo || 'Unknown device',
+      ipAddress: (validatedInput as any).ipAddress || 'Unknown IP',
+      loginTime: new Date(),
+      lastActivity: new Date(),
+    });
+
     // Update user status to ONLINE
     await this.prisma.user.update({
       where: { id: user.id },
@@ -164,10 +178,18 @@ export class AuthService {
         refreshToken,
         expiresIn: 900, // 15 minutes in seconds
       },
+      sessionId, // Return sessionId for client storage
     };
   }
 
-  async logout(userId: string) {
+  async logout(userId: string, sessionId?: string) {
+    // Revoke specific session if provided, otherwise revoke all
+    if (sessionId) {
+      await this.sessionService.revokeSession(userId, sessionId);
+    } else {
+      await this.sessionService.revokeAllSessions(userId);
+    }
+
     await this.prisma.user.update({
       where: { id: userId },
       data: { status: 'OFFLINE', lastSeen: new Date() },
@@ -358,6 +380,108 @@ export class AuthService {
     return {
       success: true,
       message: 'Password reset successfully. You can now login with your new password.',
+    };
+  }
+
+  async getProfile(userId: string) {
+    const user = await this.prisma.user.findUnique({
+      where: { id: userId },
+      select: {
+        id: true,
+        email: true,
+        username: true,
+        displayName: true,
+        avatar: true,
+        bio: true,
+        status: true,
+        emailVerified: true,
+        lastSeen: true,
+        createdAt: true,
+        updatedAt: true,
+      },
+    });
+
+    if (!user) {
+      throw new TRPCError({
+        code: 'NOT_FOUND',
+        message: 'User not found',
+      });
+    }
+
+    return {
+      success: true,
+      user,
+    };
+  }
+
+  async updateProfile(userId: string, input: UpdateProfileInput) {
+    const validatedInput = updateProfileSchema.parse(input);
+
+    // Build update data object explicitly
+    const updateData: any = {};
+    if (validatedInput.displayName !== undefined) updateData.displayName = validatedInput.displayName;
+    if (validatedInput.bio !== undefined) updateData.bio = validatedInput.bio;
+    if (validatedInput.avatar !== undefined) updateData.avatar = validatedInput.avatar;
+    if (validatedInput.status !== undefined) updateData.status = validatedInput.status;
+
+    const user = await this.prisma.user.update({
+      where: { id: userId },
+      data: updateData,
+      select: {
+        id: true,
+        email: true,
+        username: true,
+        displayName: true,
+        avatar: true,
+        bio: true,
+        status: true,
+        updatedAt: true,
+      },
+    });
+
+    return {
+      success: true,
+      message: 'Profile updated successfully',
+      user,
+    };
+  }
+
+  async deleteAccount(userId: string, password: string) {
+    // Verify password before deletion
+    const user = await this.prisma.user.findUnique({
+      where: { id: userId },
+    });
+
+    if (!user) {
+      throw new TRPCError({
+        code: 'NOT_FOUND',
+        message: 'User not found',
+      });
+    }
+
+    const isPasswordValid = await this.passwordService.validatePassword(
+      password,
+      user.password,
+    );
+
+    if (!isPasswordValid) {
+      throw new TRPCError({
+        code: 'UNAUTHORIZED',
+        message: 'Invalid password',
+      });
+    }
+
+    // Revoke all sessions
+    await this.sessionService.revokeAllSessions(userId);
+
+    // Delete user (cascade will delete related data)
+    await this.prisma.user.delete({
+      where: { id: userId },
+    });
+
+    return {
+      success: true,
+      message: 'Account deleted successfully',
     };
   }
 }
