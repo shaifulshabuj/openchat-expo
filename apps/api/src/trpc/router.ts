@@ -7,9 +7,11 @@ import { PasswordService } from '../auth/password.service';
 import { EmailService } from '../auth/email.service';
 import { SessionService } from '../auth/session.service';
 import { MessageService } from '../message/message.service';
+import { ReactionService } from '../reaction/reaction.service';
 import { SocketService } from '../socket/socket.service';
 import { SocketGateway } from '../socket/socket.gateway';
 import { createMessageRouter } from '../message/message.router';
+import { createReactionRouter } from '../reaction/reaction.router';
 import { JwtService } from '@nestjs/jwt';
 
 // Initialize services
@@ -24,6 +26,7 @@ const socketGateway = new SocketGateway(jwtService, prismaService);
 const socketService = new SocketService(socketGateway);
 const authService = new AuthService(prismaService, passwordService, jwtService, emailService, sessionService);
 const messageService = new MessageService(prismaService, socketService);
+const reactionService = new ReactionService(prismaService, socketService);
 
 export const appRouter = router({
   health: publicProcedure.query(() => {
@@ -44,6 +47,7 @@ export const appRouter = router({
 
   auth: createAuthRouter(authService, sessionService),
   message: createMessageRouter(messageService),
+  reaction: createReactionRouter(reactionService),
 });
 
 export type AppRouter = typeof appRouter;
