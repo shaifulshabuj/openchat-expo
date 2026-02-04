@@ -35,8 +35,13 @@ export const deleteMessageSchema = z.object({
 
 export const searchMessagesSchema = z.object({
   conversationId: z.string().cuid(),
-  query: z.string().min(1).max(100),
-  limit: z.number().int().min(1).max(50).default(20),
+  query: z.string().min(1).max(100).optional(),
+  messageType: z.nativeEnum(MessageType).optional(),
+  senderId: z.string().cuid().optional(),
+  startDate: z.string().datetime().optional(),
+  endDate: z.string().datetime().optional(),
+  limit: z.number().int().min(1).max(100).default(20),
+  cursor: z.string().cuid().optional(),
 });
 
 export type SendMessageInput = z.infer<typeof sendMessageSchema>;

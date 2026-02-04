@@ -324,15 +324,20 @@ export class MessageService {
   }
 
   /**
-   * Search messages in conversation
+   * Search messages with advanced filters
    */
   async searchMessages(input: {
     conversationId: string;
     userId: string;
-    query: string;
+    query?: string;
+    messageType?: MessageType;
+    senderId?: string;
+    startDate?: string;
+    endDate?: string;
     limit?: number;
+    cursor?: string;
   }) {
-    // Verify user is participant
+    // 1. Verify user is conversation member
     const participant = await this.prisma.conversationMember.findFirst({
       where: {
         conversationId: input.conversationId,
@@ -346,19 +351,51 @@ export class MessageService {
 
     const limit = input.limit || 20;
 
-    return this.prisma.message.findMany({
-      where: {
-        conversationId: input.conversationId,
-        deletedAt: null,
-        content: {
-          contains: input.query,
-          mode: 'insensitive',
-        },
-      },
-      orderBy: {
-        createdAt: 'desc',
-      },
-      take: limit,
+    // 2. Build where clause dynamically
+    const where: any = {
+      conversationId: input.conversationId,
+      deletedAt: null, // Exclude deleted messages
+    };
+
+    // Full-text search in content (optional)
+    if (input.query) {
+      where.content = {
+        contains: input.query,
+        mode: 'insensitive',
+      };
+    }
+
+    // Filter by message type (optional)
+    if (input.messageType) {
+      where.type = input.messageType;
+    }
+
+    // Filter by sender (optional)
+    if (input.senderId) {
+      where.senderId = input.senderId;
+    }
+
+    // Filter by date range (optional)
+    if (input.startDate || input.endDate) {
+      where.createdAt = {};
+      if (input.startDate) {
+        where.createdAt.gte = new Date(input.startDate);
+      }
+      if (input.endDate) {
+        where.createdAt.lte = new Date(input.endDate);
+      }
+    }
+
+    // Cursor-based pagination (optional)
+    if (input.cursor) {
+      where.id = {
+        lt: input.cursor,
+      };
+    }
+
+    // 3. Fetch messages
+    const messages = await this.prisma.message.findMany({
+      where,
       include: {
         sender: {
           select: {
@@ -368,7 +405,30 @@ export class MessageService {
             avatar: true,
           },
         },
+        reactions: {
+          select: {
+            id: true,
+            emoji: true,
+            userId: true,
+          },
+        },
       },
+      orderBy: {
+        createdAt: 'desc',
+      },
+      take: limit + 1, // Fetch one extra to check for more results
     });
+
+    // 4. Determine pagination
+    const hasMore = messages.length > limit;
+    const results = hasMore ? messages.slice(0, limit) : messages;
+    const nextCursor = hasMore ? results[results.length - 1].id : null;
+
+    return {
+      messages: results,
+      nextCursor,
+      hasMore,
+      total: results.length,
+    };
   }
 }
