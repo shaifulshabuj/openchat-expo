@@ -1,0 +1,313 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// 1. User Model
+model User {
+  id            String         @id @default(cuid())
+  email         String         @unique
+  username      String         @unique
+  password      String
+  displayName   String?
+  avatar        String?
+  bio           String?
+  status        UserStatus     @default(OFFLINE)
+  lastSeen      DateTime?
+  createdAt     DateTime       @default(now())
+  updatedAt     DateTime       @updatedAt
+  
+  // Relations
+  sentMessages       Message[]           @relation("UserMessages")
+  conversations      ConversationMember[]
+  friends            Friendship[]        @relation("UserFriends")
+  friendOf           Friendship[]        @relation("FriendOf")
+  sentFriendRequests FriendRequest[]     @relation("SentRequests")
+  receivedRequests   FriendRequest[]     @relation("ReceivedRequests")
+  notifications      Notification[]
+  blockedUsers       BlockedUser[]       @relation("BlockingUser")
+  blockedBy          BlockedUser[]       @relation("BlockedUser")
+  devices            Device[]
+  
+  @@index([email])
+  @@index([username])
+}
+
+// 2. Message Model
+model Message {
+  id             String          @id @default(cuid())
+  content        String
+  type           MessageType     @default(TEXT)
+  status         MessageStatus   @default(SENT)
+  conversationId String
+  senderId       String
+  replyToId      String?
+  createdAt      DateTime        @default(now())
+  updatedAt      DateTime        @updatedAt
+  deletedAt      DateTime?
+  
+  // Relations
+  conversation   Conversation    @relation(fields: [conversationId], references: [id], onDelete: Cascade)
+  sender         User            @relation("UserMessages", fields: [senderId], references: [id], onDelete: Cascade)
+  replyTo        Message?        @relation("MessageReplies", fields: [replyToId], references: [id])
+  replies        Message[]       @relation("MessageReplies")
+  attachments    Attachment[]
+  readReceipts   ReadReceipt[]
+  reactions      Reaction[]
+  
+  @@index([conversationId])
+  @@index([senderId])
+  @@index([createdAt])
+}
+
+// 3. Conversation Model
+model Conversation {
+  id          String               @id @default(cuid())
+  type        ConversationType     @default(DIRECT)
+  name        String?
+  description String?
+  avatar      String?
+  createdAt   DateTime             @default(now())
+  updatedAt   DateTime             @updatedAt
+  
+  // Relations
+  messages    Message[]
+  members     ConversationMember[]
+  
+  @@index([type])
+}
+
+// 4. ConversationMember Model
+model ConversationMember {
+  id             String       @id @default(cuid())
+  conversationId String
+  userId         String
+  role           MemberRole   @default(MEMBER)
+  joinedAt       DateTime     @default(now())
+  leftAt         DateTime?
+  mutedUntil     DateTime?
+  
+  // Relations
+  conversation   Conversation @relation(fields: [conversationId], references: [id], onDelete: Cascade)
+  user           User         @relation(fields: [userId], references: [id], onDelete: Cascade)
+  
+  @@unique([conversationId, userId])
+  @@index([userId])
+}
+
+// 5. Friendship Model
+model Friendship {
+  id         String   @id @default(cuid())
+  userId     String
+  friendId   String
+  createdAt  DateTime @default(now())
+  
+  // Relations
+  user       User     @relation("UserFriends", fields: [userId], references: [id], onDelete: Cascade)
+  friend     User     @relation("FriendOf", fields: [friendId], references: [id], onDelete: Cascade)
+  
+  @@unique([userId, friendId])
+  @@index([friendId])
+}
+
+// 6. FriendRequest Model
+model FriendRequest {
+  id         String              @id @default(cuid())
+  senderId   String
+  receiverId String
+  status     FriendRequestStatus @default(PENDING)
+  createdAt  DateTime            @default(now())
+  updatedAt  DateTime            @updatedAt
+  
+  // Relations
+  sender     User                @relation("SentRequests", fields: [senderId], references: [id], onDelete: Cascade)
+  receiver   User                @relation("ReceivedRequests", fields: [receiverId], references: [id], onDelete: Cascade)
+  
+  @@unique([senderId, receiverId])
+  @@index([receiverId])
+  @@index([status])
+}
+
+// 7. Attachment Model
+model Attachment {
+  id         String   @id @default(cuid())
+  messageId  String
+  filename   String
+  fileUrl    String
+  fileType   String
+  fileSize   Int
+  createdAt  DateTime @default(now())
+  
+  // Relations
+  message    Message  @relation(fields: [messageId], references: [id], onDelete: Cascade)
+  
+  @@index([messageId])
+}
+
+// 8. ReadReceipt Model
+model ReadReceipt {
+  id        String   @id @default(cuid())
+  messageId String
+  userId    String
+  readAt    DateTime @default(now())
+  
+  // Relations
+  message   Message  @relation(fields: [messageId], references: [id], onDelete: Cascade)
+  
+  @@unique([messageId, userId])
+  @@index([userId])
+}
+
+// 9. Reaction Model
+model Reaction {
+  id        String   @id @default(cuid())
+  messageId String
+  userId    String
+  emoji     String
+  createdAt DateTime @default(now())
+  
+  // Relations
+  message   Message  @relation(fields: [messageId], references: [id], onDelete: Cascade)
+  
+  @@unique([messageId, userId, emoji])
+  @@index([messageId])
+}
+
+// 10. Notification Model
+model Notification {
+  id        String           @id @default(cuid())
+  userId    String
+  type      NotificationType
+  title     String
+  message   String
+  data      Json?
+  read      Boolean          @default(false)
+  createdAt DateTime         @default(now())
+  
+  // Relations
+  user      User             @relation(fields: [userId], references: [id], onDelete: Cascade)
+  
+  @@index([userId])
+  @@index([read])
+  @@index([createdAt])
+}
+
+// 11. BlockedUser Model
+model BlockedUser {
+  id          String   @id @default(cuid())
+  blockerId   String
+  blockedId   String
+  createdAt   DateTime @default(now())
+  
+  // Relations
+  blocker     User     @relation("BlockingUser", fields: [blockerId], references: [id], onDelete: Cascade)
+  blocked     User     @relation("BlockedUser", fields: [blockedId], references: [id], onDelete: Cascade)
+  
+  @@unique([blockerId, blockedId])
+  @@index([blockedId])
+}
+
+// 12. Device Model
+model Device {
+  id           String   @id @default(cuid())
+  userId       String
+  deviceToken  String   @unique
+  platform     String
+  deviceName   String?
+  lastActive   DateTime @default(now())
+  createdAt    DateTime @default(now())
+  
+  // Relations
+  user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  
+  @@index([userId])
+}
+
+// 13. Session Model
+model Session {
+  id          String   @id @default(cuid())
+  userId      String
+  token       String   @unique
+  refreshToken String? @unique
+  expiresAt   DateTime
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  
+  @@index([userId])
+  @@index([token])
+}
+
+// 14. Settings Model
+model Settings {
+  id                    String   @id @default(cuid())
+  userId                String   @unique
+  notificationsEnabled  Boolean  @default(true)
+  soundEnabled          Boolean  @default(true)
+  theme                 String   @default("light")
+  language              String   @default("en")
+  createdAt             DateTime @default(now())
+  updatedAt             DateTime @updatedAt
+}
+
+// Enums
+enum UserStatus {
+  ONLINE
+  OFFLINE
+  AWAY
+  DO_NOT_DISTURB
+}
+
+enum MessageType {
+  TEXT
+  IMAGE
+  VIDEO
+  AUDIO
+  FILE
+  LOCATION
+  SYSTEM
+}
+
+enum MessageStatus {
+  SENDING
+  SENT
+  DELIVERED
+  READ
+  FAILED
+}
+
+enum ConversationType {
+  DIRECT
+  GROUP
+  CHANNEL
+}
+
+enum MemberRole {
+  OWNER
+  ADMIN
+  MODERATOR
+  MEMBER
+}
+
+enum FriendRequestStatus {
+  PENDING
+  ACCEPTED
+  REJECTED
+  CANCELLED
+}
+
+enum NotificationType {
+  MESSAGE
+  FRIEND_REQUEST
+  FRIEND_ACCEPTED
+  MENTION
+  REACTION
+  SYSTEM
+}
+
