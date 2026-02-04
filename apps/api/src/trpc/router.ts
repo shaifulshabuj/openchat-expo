@@ -4,15 +4,17 @@ import { createAuthRouter } from '../auth/auth.router';
 import { AuthService } from '../auth/auth.service';
 import { PrismaService } from '../prisma/prisma.service';
 import { PasswordService } from '../auth/password.service';
+import { EmailService } from '../auth/email.service';
 import { JwtService } from '@nestjs/jwt';
 
 // Initialize services
 const prismaService = new PrismaService();
 const passwordService = new PasswordService();
+const emailService = new EmailService();
 const jwtService = new JwtService({
   secret: process.env.JWT_SECRET || 'dev-secret-change-in-production',
 });
-const authService = new AuthService(prismaService, passwordService, jwtService);
+const authService = new AuthService(prismaService, passwordService, jwtService, emailService);
 
 export const appRouter = router({
   health: publicProcedure.query(() => {

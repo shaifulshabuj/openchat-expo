@@ -4,6 +4,7 @@ import { PassportModule } from '@nestjs/passport';
 import { JwtStrategy } from './strategies/jwt.strategy';
 import { PasswordService } from './password.service';
 import { AuthService } from './auth.service';
+import { EmailService } from './email.service';
 import { PrismaModule } from '../prisma/prisma.module';
 
 @Module({
@@ -17,7 +18,7 @@ import { PrismaModule } from '../prisma/prisma.module';
       },
     }),
   ],
-  providers: [JwtStrategy, PasswordService, AuthService],
+  providers: [JwtStrategy, PasswordService, AuthService, EmailService],
   exports: [JwtModule, PassportModule, PasswordService, AuthService],
 })
 export class AuthModule {}

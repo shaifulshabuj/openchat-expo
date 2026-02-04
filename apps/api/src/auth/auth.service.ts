@@ -3,8 +3,12 @@ import { JwtService } from '@nestjs/jwt';
 import { TRPCError } from '@trpc/server';
 import { PrismaService } from '../prisma/prisma.service';
 import { PasswordService } from './password.service';
+import { EmailService } from './email.service';
 import { registerSchema, RegisterInput } from './dto/register.dto';
 import { loginSchema, LoginInput } from './dto/login.dto';
+import { verifyEmailSchema, resendVerificationSchema, VerifyEmailInput, ResendVerificationInput } from './dto/verification.dto';
+import { requestPasswordResetSchema, resetPasswordSchema, RequestPasswordResetInput, ResetPasswordInput } from './dto/password-reset.dto';
+import * as crypto from 'crypto';
 
 @Injectable()
 export class AuthService {
@@ -12,7 +16,16 @@ export class AuthService {
     private readonly prisma: PrismaService,
     private readonly passwordService: PasswordService,
     private readonly jwtService: JwtService,
+    private readonly emailService: EmailService,
   ) {}
+
+  private generateToken(length: number = 32): string {
+    return crypto.randomBytes(length).toString('hex');
+  }
+
+  private generate6DigitCode(): string {
+    return Math.floor(100000 + Math.random() * 900000).toString();
+  }
 
   async register(input: RegisterInput) {
     // Validate input
@@ -47,6 +60,11 @@ export class AuthService {
       validatedInput.password,
     );
 
+    // Generate email verification token
+    const verificationToken = this.generate6DigitCode();
+    const tokenExpiry = new Date();
+    tokenExpiry.setHours(tokenExpiry.getHours() + 24); // 24 hours expiry
+
     // Create user
     const user = await this.prisma.user.create({
       data: {
@@ -55,6 +73,8 @@ export class AuthService {
         password: hashedPassword,
         displayName: validatedInput.displayName || validatedInput.username,
         status: 'OFFLINE',
+        emailVerificationToken: verificationToken,
+        emailVerificationTokenExpiry: tokenExpiry,
       },
       select: {
         id: true,
@@ -62,12 +82,16 @@ export class AuthService {
         username: true,
         displayName: true,
         createdAt: true,
+        emailVerified: true,
       },
     });
 
+    // Send verification email
+    await this.emailService.sendVerificationEmail(user.email, verificationToken);
+
     return {
       success: true,
-      message: 'Registration successful',
+      message: 'Registration successful. Please check your email for verification code.',
       user,
     };
   }
@@ -152,6 +176,188 @@ export class AuthService {
     return {
       success: true,
       message: 'Logout successful',
+    };
+  }
+
+  async verifyEmail(input: VerifyEmailInput) {
+    const validatedInput = verifyEmailSchema.parse(input);
+
+    const user = await this.prisma.user.findUnique({
+      where: { email: validatedInput.email },
+    });
+
+    if (!user) {
+      throw new TRPCError({
+        code: 'NOT_FOUND',
+        message: 'User not found',
+      });
+    }
+
+    if (user.emailVerified) {
+      return {
+        success: true,
+        message: 'Email already verified',
+      };
+    }
+
+    if (!user.emailVerificationToken) {
+      throw new TRPCError({
+        code: 'BAD_REQUEST',
+        message: 'No verification token found. Please request a new one.',
+      });
+    }
+
+    if (user.emailVerificationToken !== validatedInput.token) {
+      throw new TRPCError({
+        code: 'UNAUTHORIZED',
+        message: 'Invalid verification token',
+      });
+    }
+
+    if (user.emailVerificationTokenExpiry && user.emailVerificationTokenExpiry < new Date()) {
+      throw new TRPCError({
+        code: 'UNAUTHORIZED',
+        message: 'Verification token has expired. Please request a new one.',
+      });
+    }
+
+    // Mark email as verified
+    await this.prisma.user.update({
+      where: { id: user.id },
+      data: {
+        emailVerified: true,
+        emailVerificationToken: null,
+        emailVerificationTokenExpiry: null,
+      },
+    });
+
+    return {
+      success: true,
+      message: 'Email verified successfully',
+    };
+  }
+
+  async resendVerification(input: ResendVerificationInput) {
+    const validatedInput = resendVerificationSchema.parse(input);
+
+    const user = await this.prisma.user.findUnique({
+      where: { email: validatedInput.email },
+    });
+
+    if (!user) {
+      throw new TRPCError({
+        code: 'NOT_FOUND',
+        message: 'User not found',
+      });
+    }
+
+    if (user.emailVerified) {
+      return {
+        success: true,
+        message: 'Email already verified',
+      };
+    }
+
+    // Generate new verification token
+    const verificationToken = this.generate6DigitCode();
+    const tokenExpiry = new Date();
+    tokenExpiry.setHours(tokenExpiry.getHours() + 24);
+
+    await this.prisma.user.update({
+      where: { id: user.id },
+      data: {
+        emailVerificationToken: verificationToken,
+        emailVerificationTokenExpiry: tokenExpiry,
+      },
+    });
+
+    // Send verification email
+    await this.emailService.sendVerificationEmail(user.email, verificationToken);
+
+    return {
+      success: true,
+      message: 'Verification email sent. Please check your inbox.',
+    };
+  }
+
+  async requestPasswordReset(input: RequestPasswordResetInput) {
+    const validatedInput = requestPasswordResetSchema.parse(input);
+
+    const user = await this.prisma.user.findUnique({
+      where: { email: validatedInput.email },
+    });
+
+    if (!user) {
+      // Don't reveal if email exists
+      return {
+        success: true,
+        message: 'If an account with that email exists, a password reset link has been sent.',
+      };
+    }
+
+    // Generate password reset token
+    const resetToken = this.generateToken(32);
+    const tokenExpiry = new Date();
+    tokenExpiry.setHours(tokenExpiry.getHours() + 1); // 1 hour expiry
+
+    await this.prisma.user.update({
+      where: { id: user.id },
+      data: {
+        passwordResetToken: resetToken,
+        passwordResetTokenExpiry: tokenExpiry,
+      },
+    });
+
+    // Send password reset email
+    await this.emailService.sendPasswordResetEmail(user.email, resetToken);
+
+    return {
+      success: true,
+      message: 'If an account with that email exists, a password reset link has been sent.',
+    };
+  }
+
+  async resetPassword(input: ResetPasswordInput) {
+    const validatedInput = resetPasswordSchema.parse(input);
+
+    const user = await this.prisma.user.findFirst({
+      where: {
+        passwordResetToken: validatedInput.token,
+      },
+    });
+
+    if (!user) {
+      throw new TRPCError({
+        code: 'UNAUTHORIZED',
+        message: 'Invalid or expired reset token',
+      });
+    }
+
+    if (user.passwordResetTokenExpiry && user.passwordResetTokenExpiry < new Date()) {
+      throw new TRPCError({
+        code: 'UNAUTHORIZED',
+        message: 'Reset token has expired. Please request a new one.',
+      });
+    }
+
+    // Hash new password
+    const hashedPassword = await this.passwordService.hashPassword(
+      validatedInput.newPassword,
+    );
+
+    // Update password and clear reset token
+    await this.prisma.user.update({
+      where: { id: user.id },
+      data: {
+        password: hashedPassword,
+        passwordResetToken: null,
+        passwordResetTokenExpiry: null,
+      },
+    });
+
+    return {
+      success: true,
+      message: 'Password reset successfully. You can now login with your new password.',
     };
   }
 }
