@@ -8,6 +8,7 @@ import { MediaPicker } from './MediaPicker';
 import { VoiceRecorder } from './VoiceRecorder';
 import { DocumentPickerComponent } from './DocumentPickerComponent';
 import { uploadMedia, uploadFile, uploadVoice, UploadProgress } from '../../lib/mediaUpload';
+import { useShouldDisableMediaUpload } from '../../hooks/useShouldDisableMediaUpload';
 
 interface MessageInputProps {
   conversationId: string;
@@ -22,6 +23,9 @@ export default function MessageInput({ conversationId, onMessageSent }: MessageI
   const typingTimeoutRef = useRef<NodeJS.Timeout | null>(null);
   const toast = useToast();
   const { socket } = useSocket();
+  
+  // Check if media/file upload should be disabled (iOS devices and macOS PWA)
+  const shouldDisableMediaUpload = useShouldDisableMediaUpload();
 
   // Emit typing indicator (debounced)
   useEffect(() => {
@@ -221,9 +225,13 @@ export default function MessageInput({ conversationId, onMessageSent }: MessageI
         alignItems="flex-end"
         space={2}
       >
-        {/* Media attachment buttons */}
-        <MediaPicker onMediaSelected={handleMediaSelected} disabled={isSending} />
-        <DocumentPickerComponent onDocumentSelected={handleDocumentSelected} disabled={isSending} />
+        {/* Media attachment buttons - hidden on iOS devices and macOS PWA due to security restrictions */}
+        {!shouldDisableMediaUpload && (
+          <>
+            <MediaPicker onMediaSelected={handleMediaSelected} disabled={isSending} />
+            <DocumentPickerComponent onDocumentSelected={handleDocumentSelected} disabled={isSending} />
+          </>
+        )}
         <VoiceRecorder onRecordingComplete={handleRecordingComplete} disabled={isSending} />
 
         {/* Text input */}
